@@ -1,11 +1,13 @@
-﻿using Avalonia.Controls.Automation.Platform;
+﻿using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
-    public class ToggleButtonAutomationPeer : ContentControlAutomationPeer, IToggleableAutomationPeer
+    public class ToggleButtonAutomationPeer : ContentControlAutomationPeer, IToggleProvider
     {
         public ToggleButtonAutomationPeer(
             IAutomationNodeFactory factory,
@@ -15,9 +17,17 @@ namespace Avalonia.Controls.Automation.Peers
         {
         }
 
-        bool? IToggleableAutomationPeer.GetToggleState() => Owner.GetValue(ToggleButton.IsCheckedProperty);
+        ToggleState IToggleProvider.ToggleState
+        {
+            get => Owner.GetValue(ToggleButton.IsCheckedProperty) switch
+            {
+                true => ToggleState.On,
+                false => ToggleState.Off,
+                null => ToggleState.Indeterminate,
+            };
+        }
 
-        void IToggleableAutomationPeer.Toggle()
+        void IToggleProvider.Toggle()
         {
             EnsureEnabled();
             (Owner as ToggleButton)?.PerformClick();

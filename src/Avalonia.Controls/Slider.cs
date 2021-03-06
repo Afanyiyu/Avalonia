@@ -1,7 +1,7 @@
 using System;
 using Avalonia.Collections;
-using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Mixins;
 using Avalonia.Controls.Primitives;

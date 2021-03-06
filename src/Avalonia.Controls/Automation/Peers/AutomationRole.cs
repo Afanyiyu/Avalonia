@@ -1,4 +1,4 @@
-﻿namespace Avalonia.Controls.Automation.Peers
+﻿namespace Avalonia.Automation.Peers
 {
     public enum AutomationRole
     {

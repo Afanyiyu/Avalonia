@@ -1,11 +1,13 @@
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     public class ButtonAutomationPeer : ContentControlAutomationPeer,
-        IInvocableAutomationPeer
+        IInvokeProvider
     {
         public ButtonAutomationPeer(
             IAutomationNodeFactory factory, 

@@ -1,4 +1,4 @@
-namespace Avalonia.Controls.Automation
+namespace Avalonia.Automation
 {
     /// <summary>
     /// This enum offers different ways of evaluating the IsOffscreen AutomationProperty

@@ -1,8 +1,8 @@
-﻿using Avalonia.Controls.Automation.Peers;
+﻿using Avalonia.Automation.Peers;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Platform
+namespace Avalonia.Automation.Platform
 {
     /// <summary>
     /// Represents a platform implementation of a root node in the UI Automation tree.
@@ -10,7 +10,7 @@ namespace Avalonia.Controls.Automation.Platform
     public interface IRootAutomationNode : IAutomationNode
     {
         /// <summary>
-        /// Called by the <see cref="IRootAutomationPeer"/> when its focus changes.
+        /// Called by the <see cref="IRootProvider"/> when its focus changes.
         /// </summary>
         /// <param name="focus">
         /// The automation peer for the newly focused control or null if no control is focused.

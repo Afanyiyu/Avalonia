@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     /// <summary>
     /// Provides a base class that exposes an element to UI Automation.
@@ -16,7 +17,7 @@ namespace Avalonia.Controls.Automation.Peers
         private bool _childrenValid;
         private AutomationPeer? _parent;
         private bool _parentValid;
-        private IRootAutomationPeer? _root;
+        private IRootProvider? _root;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationPeer"/> class.
@@ -27,7 +28,7 @@ namespace Avalonia.Controls.Automation.Peers
         protected AutomationPeer(IAutomationNodeFactory factory)
         {
             Node = factory.CreateNode(this);
-            _root = this as IRootAutomationPeer;
+            _root = this as IRootProvider;
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace Avalonia.Controls.Automation.Peers
         /// <summary>
         /// Gets the root of the automation tree that the peer is a member of.
         /// </summary>
-        public IRootAutomationPeer? GetRoot()
+        public IRootProvider? GetRoot()
         {
             EnsureConnected();
             return _root;
@@ -219,7 +220,7 @@ namespace Avalonia.Controls.Automation.Peers
             }
         }
 
-        private void SetRoot(IRootAutomationPeer? root)
+        private void SetRoot(IRootProvider? root)
         {
             if (_root != root)
             {

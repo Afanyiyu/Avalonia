@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Avalonia.Controls.Automation
+namespace Avalonia.Automation
 {
     public class ElementNotEnabledException : Exception
     {

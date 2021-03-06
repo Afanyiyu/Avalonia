@@ -1,4 +1,4 @@
-namespace Avalonia.Controls.Automation
+namespace Avalonia.Automation
 {
     /// <summary>
     /// Describes the notification characteristics of a particular live region

@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Selection;
 using Avalonia.VisualTree;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     public abstract class SelectingItemsControlAutomationPeer : ItemsControlAutomationPeer,
-        ISelectingAutomationPeer
+        ISelectionProvider
     {
         private ISelectionModel _selection;
 
@@ -25,7 +27,8 @@ namespace Avalonia.Controls.Automation.Peers
             owner.PropertyChanged += OwnerPropertyChanged;
         }
 
-        public SelectionMode GetSelectionMode() => GetSelectionModeCore();
+        public bool CanSelectMultiple => GetSelectionModeCore().HasFlagCustom(SelectionMode.Multiple);
+        public bool IsSelectionRequired => GetSelectionModeCore().HasFlagCustom(SelectionMode.AlwaysSelected);
         public IReadOnlyList<AutomationPeer> GetSelection() => GetSelectionCore() ?? Array.Empty<AutomationPeer>();
 
         protected virtual IReadOnlyList<AutomationPeer>? GetSelectionCore()

@@ -1,10 +1,10 @@
 ﻿using System;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
 using Avalonia.Controls.Primitives;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     public class PopupRootAutomationPeer : WindowBaseAutomationPeer
     {

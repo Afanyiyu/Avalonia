@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
-using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Interactivity;
 using Avalonia.Media;

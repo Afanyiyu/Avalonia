@@ -1,5 +1,5 @@
-﻿using Avalonia.Controls.Automation.Peers;
-using Avalonia.Win32.Interop.Automation;
+﻿using Avalonia.Win32.Interop.Automation;
+using AAP = Avalonia.Automation.Provider;
 
 #nullable enable
 
@@ -11,22 +11,22 @@ namespace Avalonia.Win32.Automation
         private double _rangeMinimum;
         private double _rangeMaximum;
 
-        double IRangeValueProvider.Value => InvokeSync<IRangeValueAutomationPeer, double>(x => x.GetValue());
+        double IRangeValueProvider.Value => _rangeValue;
         bool IRangeValueProvider.IsReadOnly => false;
-        double IRangeValueProvider.Maximum => InvokeSync<IRangeValueAutomationPeer, double>(x => x.GetMaximum());
-        double IRangeValueProvider.Minimum => InvokeSync<IRangeValueAutomationPeer, double>(x => x.GetMinimum());
+        double IRangeValueProvider.Maximum => _rangeMaximum;
+        double IRangeValueProvider.Minimum => _rangeMinimum;
         double IRangeValueProvider.LargeChange => 1;
         double IRangeValueProvider.SmallChange => 1;
 
-        void IRangeValueProvider.SetValue(double value) => InvokeSync<IRangeValueAutomationPeer>(x => x.SetValue(value));
+        void IRangeValueProvider.SetValue(double value) => InvokeSync((AAP.IRangeValueProvider x) => x.SetValue(value));
 
         private void UpdateRangeValue()
         {
-            if (Peer is IRangeValueAutomationPeer peer)
+            if (Peer is AAP.IRangeValueProvider peer)
             {
-                UpdateProperty(UiaPropertyId.RangeValueValue, ref _rangeValue, peer.GetValue());
-                UpdateProperty(UiaPropertyId.RangeValueMinimum, ref _rangeMinimum, peer.GetMinimum());
-                UpdateProperty(UiaPropertyId.RangeValueMaximum, ref _rangeMaximum, peer.GetMaximum());
+                UpdateProperty(UiaPropertyId.RangeValueValue, ref _rangeValue, peer.Value);
+                UpdateProperty(UiaPropertyId.RangeValueMinimum, ref _rangeMinimum, peer.Minimum);
+                UpdateProperty(UiaPropertyId.RangeValueMaximum, ref _rangeMaximum, peer.Maximum);
             }
         }
     }

@@ -1,5 +1,6 @@
-﻿using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+﻿using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
 using Avalonia.Threading;
 
 #nullable enable
@@ -16,7 +17,7 @@ namespace Avalonia.Win32.Automation
 
             return peer switch
             {
-                IRootAutomationPeer => new RootAutomationNode(peer),
+                IRootProvider => new RootAutomationNode(peer),
                 _ => new AutomationNode(peer),
             };
         }

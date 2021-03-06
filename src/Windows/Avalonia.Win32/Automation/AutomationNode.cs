@@ -7,12 +7,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Automation;
-using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Avalonia.Win32.Interop.Automation;
+using AAP = Avalonia.Automation.Provider;
 
 #nullable enable
 
@@ -25,7 +27,7 @@ namespace Avalonia.Win32.Automation
         IRawElementProviderSimple2,
         IRawElementProviderFragment,
         IRawElementProviderAdviseEvents,
-        IInvokeProvider
+        Interop.Automation.IInvokeProvider
     {
         private Rect _boundingRect;
         private List<AutomationNode>? _children;
@@ -128,15 +130,15 @@ namespace Avalonia.Win32.Automation
 
             return (UiaPatternId)patternId switch
             {
-                UiaPatternId.ExpandCollapse => Peer is IOpenCloseAutomationPeer ? this : null,
-                UiaPatternId.Invoke => Peer is IInvocableAutomationPeer ? this : null,
-                UiaPatternId.RangeValue => Peer is IRangeValueAutomationPeer ? this : null,
-                UiaPatternId.Scroll => Peer is IScrollableAutomationPeer ? this : null,
+                UiaPatternId.ExpandCollapse => Peer is AAP.IExpandCollapseProvider ? this : null,
+                UiaPatternId.Invoke => Peer is AAP.IInvokeProvider ? this : null,
+                UiaPatternId.RangeValue => Peer is AAP.IRangeValueProvider ? this : null,
+                UiaPatternId.Scroll => Peer is AAP.IScrollProvider ? this : null,
                 UiaPatternId.ScrollItem => this,
-                UiaPatternId.Selection => Peer is ISelectingAutomationPeer ? this : null,
-                UiaPatternId.SelectionItem => Peer is ISelectableAutomationPeer ? this : null,
-                UiaPatternId.Toggle => Peer is IToggleableAutomationPeer ? this : null,
-                UiaPatternId.Value => Peer is IStringValueAutomationPeer ? this : null,
+                UiaPatternId.Selection => Peer is AAP.ISelectionProvider ? this : null,
+                UiaPatternId.SelectionItem => Peer is AAP.ISelectionItemProvider ? this : null,
+                UiaPatternId.Toggle => Peer is AAP.IToggleProvider ? this : null,
+                UiaPatternId.Value => Peer is AAP.IValueProvider ? this : null,
                 _ => null,
             };
         }
@@ -213,7 +215,7 @@ namespace Avalonia.Win32.Automation
         public override string ToString() => _className!;
         IRawElementProviderSimple[]? IRawElementProviderFragment.GetEmbeddedFragmentRoots() => null;
         void IRawElementProviderSimple2.ShowContextMenu() => InvokeSync(() => Peer.ShowContextMenu());
-        void IInvokeProvider.Invoke() => InvokeSync<IInvocableAutomationPeer>(x => x.Invoke());
+        void Interop.Automation.IInvokeProvider.Invoke() => InvokeSync((AAP.IInvokeProvider x) => x.Invoke());
 
         void IRawElementProviderAdviseEvents.AdviseEventAdded(int eventId, int[] properties)
         {

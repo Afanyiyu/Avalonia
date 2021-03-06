@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Avalonia.Animation;
 using Avalonia.Controls;
-using Avalonia.Controls.Automation.Peers;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Input.Platform;

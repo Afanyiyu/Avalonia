@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
-using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;

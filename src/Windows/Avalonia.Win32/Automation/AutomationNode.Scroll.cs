@@ -1,7 +1,7 @@
 ﻿using System;
-using Avalonia.Controls.Automation.Peers;
 using Avalonia.Utilities;
 using Avalonia.Win32.Interop.Automation;
+using AAP = Avalonia.Automation.Provider;
 
 #nullable enable
 
@@ -28,39 +28,39 @@ namespace Avalonia.Win32.Automation
             switch (verticalAmount)
             {
                 case ScrollAmount.LargeDecrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.PageUp());
+                    InvokeSync<AAP.IScrollProvider>(x => x.PageUp());
                     break;
                 case ScrollAmount.SmallDecrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.LineUp());
+                    InvokeSync<AAP.IScrollProvider>(x => x.LineUp());
                     break;
                 case ScrollAmount.SmallIncrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.LineDown());
+                    InvokeSync<AAP.IScrollProvider>(x => x.LineDown());
                     break;
                 case ScrollAmount.LargeIncrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.PageDown());
+                    InvokeSync<AAP.IScrollProvider>(x => x.PageDown());
                     break;
             }
 
             switch (horizontalAmount)
             {
                 case ScrollAmount.LargeDecrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.PageLeft());
+                    InvokeSync<AAP.IScrollProvider>(x => x.PageLeft());
                     break;
                 case ScrollAmount.SmallDecrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.LineLeft());
+                    InvokeSync<AAP.IScrollProvider>(x => x.LineLeft());
                     break;
                 case ScrollAmount.SmallIncrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.LineRight());
+                    InvokeSync<AAP.IScrollProvider>(x => x.LineRight());
                     break;
                 case ScrollAmount.LargeIncrement:
-                    InvokeSync<IScrollableAutomationPeer>(x => x.PageRight());
+                    InvokeSync<AAP.IScrollProvider>(x => x.PageRight());
                     break;
             }
         }
 
         void IScrollProvider.SetScrollPercent(double horizontalPercent, double verticalPercent)
         {
-            InvokeSync<IScrollableAutomationPeer>(x =>
+            InvokeSync((AAP.IScrollProvider x) =>
             {
                 var extent = x.GetExtent();
                 var offset = x.GetOffset();
@@ -82,7 +82,7 @@ namespace Avalonia.Win32.Automation
 
         private void UpdateScroll()
         {
-            if (Peer is IScrollableAutomationPeer peer)
+            if (Peer is AAP.IScrollProvider peer)
             {
                 UpdateProperty(
                     UiaPropertyId.ScrollHorizontalScrollPercent,

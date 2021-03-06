@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Avalonia.Controls;
-using Avalonia.Controls.Automation.Peers;
 using Avalonia.Win32.Interop.Automation;
+using AAP = Avalonia.Automation.Provider;
 
 #nullable enable
 
@@ -21,37 +20,36 @@ namespace Avalonia.Win32.Automation
         IRawElementProviderSimple? ISelectionItemProvider.SelectionContainer => null;
 
         IRawElementProviderSimple[] ISelectionProvider.GetSelection() => _selection ?? Array.Empty<IRawElementProviderSimple>();
-        void ISelectionItemProvider.Select() => InvokeSync<ISelectableAutomationPeer>(x => x.Select());
-        void ISelectionItemProvider.AddToSelection() => InvokeSync<ISelectableAutomationPeer>(x => x.AddToSelection());
-        void ISelectionItemProvider.RemoveFromSelection() => InvokeSync<ISelectableAutomationPeer>(x => x.RemoveFromSelection());
+        void ISelectionItemProvider.Select() => InvokeSync<AAP.ISelectionItemProvider>(x => x.Select());
+        void ISelectionItemProvider.AddToSelection() => InvokeSync<AAP.ISelectionItemProvider>(x => x.AddToSelection());
+        void ISelectionItemProvider.RemoveFromSelection() => InvokeSync<AAP.ISelectionItemProvider>(x => x.RemoveFromSelection());
 
         private void UpdateSelection()
         {
-            if (Peer is ISelectingAutomationPeer selectionPeer)
+            if (Peer is AAP.ISelectionProvider selectionPeer)
             {
                 var selection = selectionPeer.GetSelection();
-                var selectionMode = selectionPeer.GetSelectionMode();
 
                 UpdateProperty(
                     UiaPropertyId.SelectionCanSelectMultiple,
                     ref _canSelectMultiple,
-                    selectionMode.HasFlagCustom(SelectionMode.Multiple));
+                    selectionPeer.CanSelectMultiple);
                 UpdateProperty(
                     UiaPropertyId.SelectionIsSelectionRequired,
                     ref _isSelectionRequired,
-                    selectionMode.HasFlagCustom(SelectionMode.AlwaysSelected));
+                    selectionPeer.IsSelectionRequired);
                 UpdateProperty(
                     UiaPropertyId.SelectionSelection,
                     ref _selection,
                     selection.Select(x => (IRawElementProviderSimple)x.Node!).ToArray());
             }
 
-            if (Peer is ISelectableAutomationPeer selectablePeer)
+            if (Peer is AAP.ISelectionItemProvider selectablePeer)
             {
                 UpdateProperty(
                     UiaPropertyId.SelectionItemIsSelected,
                     ref _isSelected,
-                    selectablePeer.GetIsSelected());
+                    selectablePeer.IsSelected);
             }
         }
     }

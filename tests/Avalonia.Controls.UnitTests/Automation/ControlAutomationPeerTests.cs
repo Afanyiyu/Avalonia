@@ -1,6 +1,7 @@
 ﻿using System.Linq;
-using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
@@ -287,7 +288,7 @@ namespace Avalonia.Controls.UnitTests.Automation
             }
         }
 
-        private class TestRootAutomationPeer : ControlAutomationPeer, IRootAutomationPeer
+        private class TestRootAutomationPeer : ControlAutomationPeer, IRootProvider
         {
             public TestRootAutomationPeer(IAutomationNodeFactory factory, Control owner)
                 : base(factory, owner, AutomationRole.Custom)

@@ -1,11 +1,13 @@
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
-    public class RangeBaseAutomationPeer : ControlAutomationPeer, IRangeValueAutomationPeer
+    public class RangeBaseAutomationPeer : ControlAutomationPeer, IRangeValueProvider
     {
         public RangeBaseAutomationPeer(
             IAutomationNodeFactory factory,
@@ -16,9 +18,10 @@ namespace Avalonia.Controls.Automation.Peers
             owner.PropertyChanged += OwnerPropertyChanged;
         }
 
-        public double GetMaximum() => Owner.GetValue(RangeBase.MaximumProperty);
-        public double GetMinimum() => Owner.GetValue(RangeBase.MinimumProperty);
-        public double GetValue() => Owner.GetValue(RangeBase.ValueProperty);
+        public virtual bool IsReadOnly => false;
+        public double Maximum => Owner.GetValue(RangeBase.MaximumProperty);
+        public double Minimum => Owner.GetValue(RangeBase.MinimumProperty);
+        public double Value => Owner.GetValue(RangeBase.ValueProperty);
         public void SetValue(double value) => Owner.SetValue(RangeBase.ValueProperty, value);
 
         protected virtual void OwnerPropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)

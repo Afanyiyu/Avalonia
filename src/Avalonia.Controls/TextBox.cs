@@ -14,8 +14,8 @@ using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Utilities;
 using Avalonia.Controls.Metadata;
-using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Peers;
+using Avalonia.Automation.Platform;
 
 namespace Avalonia.Controls
 {

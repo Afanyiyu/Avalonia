@@ -1,10 +1,11 @@
-﻿using Avalonia.Platform;
+﻿using Avalonia.Automation.Peers;
+using Avalonia.Platform;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Provider
 {
-    public interface IRootAutomationPeer
+    public interface IRootProvider
     {
         ITopLevelImpl? PlatformImpl { get; }
         AutomationPeer? GetFocus();

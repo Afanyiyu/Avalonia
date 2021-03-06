@@ -1,5 +1,5 @@
-﻿using Avalonia.Controls.Automation.Peers;
-using Avalonia.Win32.Interop.Automation;
+﻿using Avalonia.Win32.Interop.Automation;
+using AAP = Avalonia.Automation.Provider;
 
 #nullable enable
 
@@ -11,13 +11,13 @@ namespace Avalonia.Win32.Automation
 
         string? IValueProvider.Value => _value;
         bool IValueProvider.IsReadOnly => false;
-        void IValueProvider.SetValue(string? value) => InvokeSync<IStringValueAutomationPeer>(x => x.SetValue(value));
+        void IValueProvider.SetValue(string? value) => InvokeSync<AAP.IValueProvider>(x => x.SetValue(value));
 
         private void UpdateValue()
         {
-            if (Peer is IStringValueAutomationPeer peer)
+            if (Peer is AAP.IValueProvider peer)
             {
-                UpdateProperty(UiaPropertyId.ValueValue, ref _value, peer.GetValue());
+                UpdateProperty(UiaPropertyId.ValueValue, ref _value, peer.Value);
             }
         }
     }

@@ -1,10 +1,12 @@
-﻿using Avalonia.Controls.Automation.Platform;
+﻿using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
-    public class ScrollViewerAutomationPeer : ControlAutomationPeer, IScrollableAutomationPeer
+    public class ScrollViewerAutomationPeer : ControlAutomationPeer, IScrollProvider
     {
         public ScrollViewerAutomationPeer(
             IAutomationNodeFactory factory,

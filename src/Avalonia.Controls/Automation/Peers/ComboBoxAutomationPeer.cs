@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     public class ComboBoxAutomationPeer : SelectingItemsControlAutomationPeer,
-        IOpenCloseAutomationPeer
+        IExpandCollapseProvider
     {
         public ComboBoxAutomationPeer(
             IAutomationNodeFactory factory,
@@ -16,13 +18,19 @@ namespace Avalonia.Controls.Automation.Peers
         {
         }
 
-        public void Close() => Owner.SetValue(ComboBox.IsDropDownOpenProperty, false);
-        public bool GetIsOpen() => Owner.GetValue(ComboBox.IsDropDownOpenProperty);
-        public void Open() => Owner.SetValue(ComboBox.IsDropDownOpenProperty, true);
+        public ExpandCollapseState ExpandCollapseState
+        {
+            get => Owner.GetValue(ComboBox.IsDropDownOpenProperty) ?
+                ExpandCollapseState.Expanded :
+                ExpandCollapseState.Collapsed;
+        }
+
+        public void Collapse() => Owner.SetValue(ComboBox.IsDropDownOpenProperty, false);
+        public void Expand() => Owner.SetValue(ComboBox.IsDropDownOpenProperty, true);
 
         protected override IReadOnlyList<AutomationPeer>? GetSelectionCore()
         {
-            if (GetIsOpen())
+            if (ExpandCollapseState == ExpandCollapseState.Expanded)
                 return base.GetSelectionCore();
 
             // If the combo box is not open then we won't have an ItemsPresenter so the default

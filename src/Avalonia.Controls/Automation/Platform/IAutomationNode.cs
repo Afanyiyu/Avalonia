@@ -1,7 +1,7 @@
 ﻿using System;
-using Avalonia.Controls.Automation.Peers;
+using Avalonia.Automation.Peers;
 
-namespace Avalonia.Controls.Automation.Platform
+namespace Avalonia.Automation.Platform
 {
     /// <summary>
     /// Represents a platform implementation of a node in the UI Automation tree.

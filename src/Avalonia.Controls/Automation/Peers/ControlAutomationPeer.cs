@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Controls;
 using Avalonia.VisualTree;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     /// <summary>
     /// An automation peer which represents a <see cref="Control"/> element.

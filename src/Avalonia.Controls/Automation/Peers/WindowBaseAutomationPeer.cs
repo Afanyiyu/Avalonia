@@ -1,14 +1,16 @@
 using System.ComponentModel;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
-    public class WindowBaseAutomationPeer : ControlAutomationPeer, IRootAutomationPeer
+    public class WindowBaseAutomationPeer : ControlAutomationPeer, IRootProvider
     {
         private Control? _focus;
 

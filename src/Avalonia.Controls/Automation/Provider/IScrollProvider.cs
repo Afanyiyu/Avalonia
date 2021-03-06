@@ -1,6 +1,10 @@
-﻿namespace Avalonia.Controls.Automation.Peers
+﻿namespace Avalonia.Automation.Provider
 {
-    public interface IScrollableAutomationPeer
+    /// <summary>
+    /// Exposes methods and properties to support access by a UI Automation client to a control
+    /// that acts as a scrollable container for a collection of child objects. 
+    /// </summary>
+    public interface IScrollProvider
     {
         Size GetExtent();
         Vector GetOffset();

@@ -1,14 +1,16 @@
 ﻿using System;
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Selection;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     public class ListItemAutomationPeer : ContentControlAutomationPeer,
-        ISelectableAutomationPeer
+        ISelectionItemProvider
     {
         public ListItemAutomationPeer(
             IAutomationNodeFactory factory,
@@ -18,17 +20,20 @@ namespace Avalonia.Controls.Automation.Peers
         {
         }
 
-        public bool GetIsSelected() => Owner.GetValue(TabItem.IsSelectedProperty);
+        public bool IsSelected => Owner.GetValue(TabItem.IsSelectedProperty);
 
-        public ISelectingAutomationPeer? GetSelectionContainer()
+        public ISelectionProvider? SelectionContainer
         {
-            if (Owner.Parent is Control parent)
+            get
             {
-                var parentPeer = GetOrCreatePeer(parent);
-                return parentPeer as ISelectingAutomationPeer;
-            }
+                if (Owner.Parent is Control parent)
+                {
+                    var parentPeer = GetOrCreatePeer(parent);
+                    return parentPeer as ISelectionProvider;
+                }
 
-            return null;
+                return null;
+            }
         }
 
         public void Select()
@@ -44,7 +49,7 @@ namespace Avalonia.Controls.Automation.Peers
             }
         }
 
-        void ISelectableAutomationPeer.AddToSelection()
+        void ISelectionItemProvider.AddToSelection()
         {
             EnsureEnabled();
 
@@ -58,7 +63,7 @@ namespace Avalonia.Controls.Automation.Peers
             }
         }
 
-        void ISelectableAutomationPeer.RemoveFromSelection()
+        void ISelectionItemProvider.RemoveFromSelection()
         {
             EnsureEnabled();
 

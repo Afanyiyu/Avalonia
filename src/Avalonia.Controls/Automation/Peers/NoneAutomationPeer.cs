@@ -1,8 +1,9 @@
-using Avalonia.Controls.Automation.Platform;
+using Avalonia.Automation.Platform;
+using Avalonia.Controls;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
     /// <summary>
     /// An automation peer which represents an element that is exposed to automation as non-

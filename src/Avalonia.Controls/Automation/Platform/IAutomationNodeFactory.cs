@@ -1,8 +1,8 @@
-﻿using Avalonia.Controls.Automation.Peers;
+﻿using Avalonia.Automation.Peers;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Platform
+namespace Avalonia.Automation.Platform
 {
     /// <summary>
     /// Creates nodes in the UI Automation tree of the underlying platform.

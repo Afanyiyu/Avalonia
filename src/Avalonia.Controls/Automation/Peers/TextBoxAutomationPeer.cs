@@ -1,10 +1,12 @@
-﻿using Avalonia.Controls.Automation.Platform;
+﻿using Avalonia.Automation.Platform;
+using Avalonia.Automation.Provider;
+using Avalonia.Controls;
 
 #nullable enable
 
-namespace Avalonia.Controls.Automation.Peers
+namespace Avalonia.Automation.Peers
 {
-    public class TextBoxAutomationPeer : TextAutomationPeer, IStringValueAutomationPeer
+    public class TextBoxAutomationPeer : TextAutomationPeer, IValueProvider
     {
         public TextBoxAutomationPeer(
             IAutomationNodeFactory factory,
@@ -14,8 +16,9 @@ namespace Avalonia.Controls.Automation.Peers
         {
         }
 
-        string IStringValueAutomationPeer.GetValue() => Owner.GetValue(TextBlock.TextProperty);
-        void IStringValueAutomationPeer.SetValue(string? value) => Owner.SetValue(TextBlock.TextProperty, value);
+        bool IValueProvider.IsReadOnly => false;
+        string? IValueProvider.Value => Owner.GetValue(TextBlock.TextProperty);
+        void IValueProvider.SetValue(string? value) => Owner.SetValue(TextBlock.TextProperty, value);
 
         protected override string GetLocalizedControlTypeCore() => "text box";
     }

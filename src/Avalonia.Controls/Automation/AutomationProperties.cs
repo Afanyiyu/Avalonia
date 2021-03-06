@@ -1,6 +1,7 @@
 using System;
+using Avalonia.Controls;
 
-namespace Avalonia.Controls.Automation
+namespace Avalonia.Automation
 {
     public static class AutomationProperties
     {
