@@ -1,11 +1,16 @@
-﻿#nullable enable
+﻿using Avalonia.Controls.Automation.Platform;
+
+#nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
     public class MenuItemAutomationPeer : ControlAutomationPeer
     {
-        public MenuItemAutomationPeer(Control owner)
-            : base(owner, AutomationRole.MenuItem) 
+        public MenuItemAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.MenuItem)
+            : base(factory, owner, role) 
         { 
         }
 

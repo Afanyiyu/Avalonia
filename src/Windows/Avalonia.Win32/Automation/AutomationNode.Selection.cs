@@ -8,7 +8,7 @@ using Avalonia.Win32.Interop.Automation;
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationProvider : ISelectionProvider, ISelectionItemProvider
+    internal partial class AutomationNode : ISelectionProvider, ISelectionItemProvider
     {
         private bool _canSelectMultiple;
         private bool _isSelectionRequired;
@@ -25,7 +25,7 @@ namespace Avalonia.Win32.Automation
         void ISelectionItemProvider.AddToSelection() => InvokeSync<ISelectableAutomationPeer>(x => x.AddToSelection());
         void ISelectionItemProvider.RemoveFromSelection() => InvokeSync<ISelectableAutomationPeer>(x => x.RemoveFromSelection());
 
-        private void UpdateSelection(bool notify)
+        private void UpdateSelection()
         {
             if (Peer is ISelectingAutomationPeer selectionPeer)
             {
@@ -35,18 +35,15 @@ namespace Avalonia.Win32.Automation
                 UpdateProperty(
                     UiaPropertyId.SelectionCanSelectMultiple,
                     ref _canSelectMultiple,
-                    selectionMode.HasFlagCustom(SelectionMode.Multiple),
-                    notify);
+                    selectionMode.HasFlagCustom(SelectionMode.Multiple));
                 UpdateProperty(
                     UiaPropertyId.SelectionIsSelectionRequired,
                     ref _isSelectionRequired,
-                    selectionMode.HasFlagCustom(SelectionMode.AlwaysSelected),
-                    notify);
+                    selectionMode.HasFlagCustom(SelectionMode.AlwaysSelected));
                 UpdateProperty(
                     UiaPropertyId.SelectionSelection,
                     ref _selection,
-                    selection.Select(x => (IRawElementProviderSimple)x.PlatformImpl!).ToArray(),
-                    notify);
+                    selection.Select(x => (IRawElementProviderSimple)x.Node!).ToArray());
             }
 
             if (Peer is ISelectableAutomationPeer selectablePeer)
@@ -54,8 +51,7 @@ namespace Avalonia.Win32.Automation
                 UpdateProperty(
                     UiaPropertyId.SelectionItemIsSelected,
                     ref _isSelected,
-                    selectablePeer.GetIsSelected(),
-                    notify);
+                    selectablePeer.GetIsSelected());
             }
         }
     }

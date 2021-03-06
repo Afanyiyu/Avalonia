@@ -1,3 +1,5 @@
+using Avalonia.Controls.Automation.Platform;
+
 #nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
@@ -5,8 +7,11 @@ namespace Avalonia.Controls.Automation.Peers
     public class ButtonAutomationPeer : ContentControlAutomationPeer,
         IInvocableAutomationPeer
     {
-        public ButtonAutomationPeer(Control owner, AutomationRole role = AutomationRole.Button)
-            : base(owner, role) 
+        public ButtonAutomationPeer(
+            IAutomationNodeFactory factory, 
+            Control owner,
+            AutomationRole role = AutomationRole.Button)
+            : base(factory, owner, role) 
         {
         }
         

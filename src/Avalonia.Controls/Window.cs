@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -959,6 +960,9 @@ namespace Avalonia.Controls
             }
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer() => new WindowAutomationPeer(this);
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+        {
+            return new WindowAutomationPeer(factory, this);
+        }
     }
 }

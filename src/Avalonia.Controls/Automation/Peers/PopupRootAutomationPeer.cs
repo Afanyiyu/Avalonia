@@ -1,8 +1,6 @@
 ﻿using System;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives;
-using Avalonia.Input;
-using Avalonia.LogicalTree;
-using Avalonia.VisualTree;
 
 #nullable enable
 
@@ -10,25 +8,14 @@ namespace Avalonia.Controls.Automation.Peers
 {
     public class PopupRootAutomationPeer : WindowBaseAutomationPeer
     {
-        public PopupRootAutomationPeer(PopupRoot owner)
-            : base(owner)
+        public PopupRootAutomationPeer(IAutomationNodeFactory factory, PopupRoot owner)
+            : base(factory, owner)
         {
             if (owner.IsVisible)
                 StartTrackingFocus();
             else
                 owner.Opened += OnOpened;
             owner.Closed += OnClosed;
-        }
-
-        protected override AutomationPeer? GetParentCore()
-        {
-            if (Owner.GetLogicalParent() is Control parent &&
-                ((IVisual)parent).IsAttachedToVisualTree)
-            {
-                return GetOrCreatePeer(parent);
-            }
-
-            return null;
         }
 
         protected override bool IsControlElementCore() => false;
@@ -43,7 +30,6 @@ namespace Avalonia.Controls.Automation.Peers
         {
             ((PopupRoot)Owner).Closed -= OnClosed;
             StopTrackingFocus();
-            InvalidatePlatformImpl();
         }
     }
 }

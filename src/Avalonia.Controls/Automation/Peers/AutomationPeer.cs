@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Avalonia.Platform;
+using System.Linq;
+using Avalonia.Controls.Automation.Platform;
 
 #nullable enable
 
@@ -11,14 +12,28 @@ namespace Avalonia.Controls.Automation.Peers
     /// </summary>
     public abstract class AutomationPeer
     {
-        private bool _isCreatingPlatformImpl;
-        private IAutomationPeerImpl? _platformImpl;
+        private IReadOnlyList<AutomationPeer>? _children;
+        private bool _childrenValid;
+        private AutomationPeer? _parent;
+        private bool _parentValid;
+        private IRootAutomationPeer? _root;
 
         /// <summary>
-        /// Gets the platform implementation of the automation peer.
+        /// Initializes a new instance of the <see cref="AutomationPeer"/> class.
         /// </summary>
-        public IAutomationPeerImpl PlatformImpl => _platformImpl ??
-            throw new AvaloniaInternalException("Automation peer not yet initialized.");
+        /// <param name="factory">
+        /// The factory to use to create the platform automation node.
+        /// </param>
+        protected AutomationPeer(IAutomationNodeFactory factory)
+        {
+            Node = factory.CreateNode(this);
+            _root = this as IRootAutomationPeer;
+        }
+
+        /// <summary>
+        /// Gets the related node in the platform UI Automation tree.
+        /// </summary>
+        public IAutomationNode Node { get; }
 
         /// <summary>
         /// Attempts to bring the element associated with the automation peer into view.
@@ -34,7 +49,7 @@ namespace Avalonia.Controls.Automation.Peers
         /// <summary>
         /// Gets the child automation peers.
         /// </summary>
-        public IReadOnlyList<AutomationPeer> GetChildren() => GetChildrenCore() ?? Array.Empty<AutomationPeer>();
+        public IReadOnlyList<AutomationPeer> GetChildren() => GetOrCreateChildren();
 
         /// <summary>
         /// Gets a string that describes the class of the element.
@@ -56,12 +71,25 @@ namespace Avalonia.Controls.Automation.Peers
         /// Gets the <see cref="AutomationPeer"/> that is the parent of this <see cref="AutomationPeer"/>.
         /// </summary>
         /// <returns></returns>
-        public AutomationPeer? GetParent() => GetParentCore();
+        public AutomationPeer? GetParent()
+        {
+            EnsureConnected();
+            return _parent;
+        }
 
         /// <summary>
         /// Gets the role of the element that is associated with this automation peer.
         /// </summary>
         public AutomationRole GetRole() => GetRoleCore();
+
+        /// <summary>
+        /// Gets the root of the automation tree that the peer is a member of.
+        /// </summary>
+        public IRootAutomationPeer? GetRoot()
+        {
+            EnsureConnected();
+            return _root;
+        }
 
         /// <summary>
         /// Gets a value that indicates whether the element that is associated with this automation
@@ -97,14 +125,33 @@ namespace Avalonia.Controls.Automation.Peers
         /// <returns>true if a context menu is present for the element; otherwise false.</returns>
         public bool ShowContextMenu() => ShowContextMenuCore();
 
+        /// <summary>
+        /// Invalidates the peer's children and causes a re-read from <see cref="GetChildrenCore"/>.
+        /// </summary>
+        public void InvalidateChildren()
+        {
+            _childrenValid = false;
+            Node!.ChildrenChanged();
+        }
+
+        /// <summary>
+        /// Invalidates the peer's parent.
+        /// </summary>
+        public void InvalidateParent()
+        {
+            _parent = null;
+            _parentValid = false;
+            SetRoot(null);
+            Node.ParentChanged();
+        }
+
         protected abstract void BringIntoViewCore();
-        protected abstract IAutomationPeerImpl CreatePlatformImplCore();
+        protected abstract IAutomationNode CreatePlatformImplCore(IAutomationNodeFactory factory);
         protected abstract Rect GetBoundingRectangleCore();
         protected abstract IReadOnlyList<AutomationPeer>? GetChildrenCore();
         protected abstract string GetClassNameCore();
         protected abstract string GetLocalizedControlTypeCore();
         protected abstract string? GetNameCore();
-        protected abstract AutomationPeer? GetParentCore();
         protected abstract AutomationRole GetRoleCore();
         protected abstract bool HasKeyboardFocusCore();
         protected abstract bool IsControlElementCore();
@@ -113,40 +160,79 @@ namespace Avalonia.Controls.Automation.Peers
         protected abstract void SetFocusCore();
         protected abstract bool ShowContextMenuCore();
 
+        /// <summary>
+        /// When overriden in a derived class, tries to ensure that the peer is connected to a tree.
+        /// </summary>
+        /// <remarks>
+        /// A peer's parent is set when it's added to another peer's children collection, so for the
+        /// parent to be valid the ancestor tree must be fully constructed. In the case where a peer
+        /// is created before some of its ancestors this method is called to construct the ancestor
+        /// tree.
+        /// </remarks>
+        protected abstract void TryConnectToTree();
+
         protected void EnsureEnabled()
         {
             if (!IsEnabled())
                 throw new ElementNotEnabledException();
         }
 
-        protected void InvalidatePlatformImpl()
+        private void EnsureConnected()
         {
-            _platformImpl?.Dispose();
-            _platformImpl = null;
-            CreatePlatformImpl();
+            if (!_parentValid)
+            {
+                TryConnectToTree();
+                _parentValid = true;
+            }
+        }
+
+        private IReadOnlyList<AutomationPeer> GetOrCreateChildren()
+        {
+            var children = _children ?? Array.Empty<AutomationPeer>();
+
+            if (_childrenValid)
+                return children;
+
+            var newChildren = GetChildrenCore() ?? Array.Empty<AutomationPeer>();
+
+            foreach (var peer in children.Except(newChildren))
+                peer.SetParent(null);
+            foreach (var peer in newChildren)
+                peer.SetParent(this);
+
+            _childrenValid = true;
+            return _children = newChildren;
         }
 
         protected void InvalidateProperties()
         {
-            _platformImpl?.PropertyChanged();
+            Node.PropertyChanged();
         }
 
-        internal void CreatePlatformImpl()
+        private void SetParent(AutomationPeer? parent)
         {
-            if (_platformImpl is object)
-                throw new AvaloniaInternalException("AutomationPeer already has a PlatformImpl.");
-            if (_isCreatingPlatformImpl)
-                throw new AvaloniaInternalException("AutomationPeer encountered recursion creating PlatformImpl.");
-
-            try
+            if (parent != _parent)
             {
-                _isCreatingPlatformImpl = true;
-                _platformImpl = CreatePlatformImplCore() ??
-                    throw new InvalidOperationException("CreatePlatformImplCore returned null.");
+                _parent = parent;
+                SetRoot(parent?._root);
+                Node.ParentChanged();
             }
-            finally
+        }
+
+        private void SetRoot(IRootAutomationPeer? root)
+        {
+            if (_root != root)
             {
-                _isCreatingPlatformImpl = false;
+                _root = root;
+                Node.RootChanged();
+
+                if (_childrenValid && _children is object)
+                {
+                    foreach (var child in _children)
+                    {
+                        child.SetRoot(root);
+                    }
+                }
             }
         }
     }

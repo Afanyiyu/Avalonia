@@ -1,4 +1,5 @@
 ﻿using System;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Selection;
 
@@ -9,8 +10,11 @@ namespace Avalonia.Controls.Automation.Peers
     public class ListItemAutomationPeer : ContentControlAutomationPeer,
         ISelectableAutomationPeer
     {
-        public ListItemAutomationPeer(Control owner, AutomationRole role = AutomationRole.ListItem)
-            : base(owner, role)
+        public ListItemAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.ListItem)
+            : base(factory, owner, role)
         {
         }
 
@@ -20,7 +24,7 @@ namespace Avalonia.Controls.Automation.Peers
         {
             if (Owner.Parent is Control parent)
             {
-                var parentPeer = ControlAutomationPeer.GetOrCreatePeer(parent);
+                var parentPeer = GetOrCreatePeer(parent);
                 return parentPeer as ISelectingAutomationPeer;
             }
 

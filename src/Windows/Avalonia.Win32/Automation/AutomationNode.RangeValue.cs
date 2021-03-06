@@ -5,7 +5,7 @@ using Avalonia.Win32.Interop.Automation;
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationProvider : IRangeValueProvider
+    internal partial class AutomationNode : IRangeValueProvider
     {
         private double _rangeValue;
         private double _rangeMinimum;
@@ -20,13 +20,13 @@ namespace Avalonia.Win32.Automation
 
         void IRangeValueProvider.SetValue(double value) => InvokeSync<IRangeValueAutomationPeer>(x => x.SetValue(value));
 
-        private void UpdateRangeValue(bool notify)
+        private void UpdateRangeValue()
         {
             if (Peer is IRangeValueAutomationPeer peer)
             {
-                UpdateProperty(UiaPropertyId.RangeValueValue, ref _rangeValue, peer.GetValue(), notify);
-                UpdateProperty(UiaPropertyId.RangeValueMinimum, ref _rangeMinimum, peer.GetMinimum(), notify);
-                UpdateProperty(UiaPropertyId.RangeValueMaximum, ref _rangeMaximum, peer.GetMaximum(), notify);
+                UpdateProperty(UiaPropertyId.RangeValueValue, ref _rangeValue, peer.GetValue());
+                UpdateProperty(UiaPropertyId.RangeValueMinimum, ref _rangeMinimum, peer.GetMinimum());
+                UpdateProperty(UiaPropertyId.RangeValueMaximum, ref _rangeMaximum, peer.GetMaximum());
             }
         }
     }

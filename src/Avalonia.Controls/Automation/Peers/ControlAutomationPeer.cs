@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Avalonia.Controls.Platform;
-using Avalonia.Platform;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.VisualTree;
 
 #nullable enable
@@ -14,18 +13,15 @@ namespace Avalonia.Controls.Automation.Peers
     public class ControlAutomationPeer : AutomationPeer
     {
         private readonly AutomationRole _role;
-        private List<AutomationPeer>? _children;
-        private bool _childrenValid;
 
-        public ControlAutomationPeer(Control owner, AutomationRole role)
+        public ControlAutomationPeer(IAutomationNodeFactory factory, Control owner, AutomationRole role)
+            : base(factory)
         {
             Owner = owner ?? throw new ArgumentNullException("owner");
 
             _role = role;
 
             owner.PropertyChanged += OwnerPropertyChanged;
-            owner.AttachedToVisualTree += OwnerVisualTreeAttachedDetached;
-            owner.DetachedFromVisualTree += OwnerVisualTreeAttachedDetached;
             
             var visualChildren = ((IVisual)owner).VisualChildren;
             visualChildren.CollectionChanged += VisualChildrenChanged;
@@ -33,24 +29,38 @@ namespace Avalonia.Controls.Automation.Peers
 
         public Control Owner { get; }
 
-        public static AutomationPeer GetOrCreatePeer(Control element)
+        public static AutomationPeer GetOrCreatePeer(IAutomationNodeFactory factory, Control element)
         {
             element = element ?? throw new ArgumentNullException("element");
-            return element.GetOrCreateAutomationPeer();
+            return element.GetOrCreateAutomationPeer(factory);
         }
 
-        public void ResetChildrenCache()
+        public AutomationPeer GetOrCreatePeer(Control element)
         {
-            _childrenValid = false;
-            PlatformImpl!.StructureChanged();
+            return element == Owner ? this : GetOrCreatePeer(Node.Factory, element);
         }
 
         protected override void BringIntoViewCore() => Owner.BringIntoView();
 
-        protected override IAutomationPeerImpl CreatePlatformImplCore()
+        protected override IAutomationNode CreatePlatformImplCore(IAutomationNodeFactory factory)
         {
-            return GetPlatformImplFactory()?.CreateAutomationPeerImpl(this) ??
-                DetachedPlatformImpl.Instance;
+            return factory.CreateNode(this);
+        }
+
+        protected override void TryConnectToTree()
+        {
+            var parent = Owner.GetVisualParent();
+
+            while (parent is object)
+            {
+                if (parent is Control c)
+                {
+                    var parentPeer = GetOrCreatePeer(c);
+                    parentPeer.GetChildren();
+                }
+
+                parent = parent.GetVisualParent();
+            }
         }
 
         protected override Rect GetBoundingRectangleCore()
@@ -72,51 +82,25 @@ namespace Avalonia.Controls.Automation.Peers
         {
             var children = ((IVisual)Owner).VisualChildren;
 
-            if (!_childrenValid)
+            if (children.Count == 0)
+                return null;
+
+            var result = new List<AutomationPeer>();
+
+            foreach (var child in children)
             {
-                if (children.Count > 0)
-                    _children ??= new List<AutomationPeer>();
-
-                var i = -1;
-
-                foreach (var child in children)
+                if (child is Control c && c.IsVisible)
                 {
-                    if (child is Control c && c.IsVisible)
-                    {
-                        var peer = GetOrCreatePeer(c);
-
-                        if (_children!.Count <= ++i)
-                            _children.Add(peer);
-                        else
-                            _children[i] = peer;
-                    }
+                    result.Add(GetOrCreatePeer(c));
                 }
-
-                if (_children?.Count > ++i)
-                {
-                    _children.RemoveRange(i, _children.Count - i);
-                }
-
-                _childrenValid = true;
             }
 
-            return _children;
+            return result;
         }
 
         protected override string GetClassNameCore() => Owner.GetType().Name;
         protected override string GetLocalizedControlTypeCore() => GetClassNameCore();
         protected override string? GetNameCore() => AutomationProperties.GetName(Owner);
-
-        protected override AutomationPeer? GetParentCore()
-        {
-            return Owner.GetVisualParent() switch
-            {
-                Control c => GetOrCreatePeer(c),
-                null => null,
-                _ => throw new NotSupportedException("Don't know how to create a peer for a non-Control parent."),
-            };
-        }
-
         protected override AutomationRole GetRoleCore() => _role;
         protected override bool HasKeyboardFocusCore() => Owner.IsFocused;
         protected override bool IsControlElementCore() => GetRole() != AutomationRole.None;
@@ -142,46 +126,24 @@ namespace Avalonia.Controls.Automation.Peers
             return false;
         }
 
-        private IPlatformAutomationInterface? GetPlatformImplFactory()
-        {
-            var root = Owner.GetVisualRoot();
-
-            // We only create a real (i.e. not detached) platform impl if the control is attached
-            // to the visual tree.
-            if (root is null || !root.IsVisible)
-                return null;
-
-            return (root as TopLevel)?.PlatformImpl as IPlatformAutomationInterface;
-        }
-
-        private void VisualChildrenChanged(object sender, EventArgs e) => ResetChildrenCache();
-
-        private void OwnerVisualTreeAttachedDetached(object sender, VisualTreeAttachmentEventArgs e)
-        {
-            InvalidatePlatformImpl();
-        }
+        private void VisualChildrenChanged(object sender, EventArgs e) => InvalidateChildren();
 
         private void OwnerPropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
-            switch (e.Property.Name)
+            if (e.Property == Visual.IsVisibleProperty)
             {
-                case nameof(Visual.IsVisible):
-                    (GetParent() as ControlAutomationPeer)?.ResetChildrenCache();
-                    break;
-                case nameof(Visual.TransformedBounds):
-                    InvalidateProperties();
-                    break;
+                var parent = Owner.GetVisualParent();
+                if (parent is Control c)
+                    GetOrCreatePeer(c).InvalidateChildren();
             }
-        }
-
-        // When a control is detched from the visual tree, we use a stub platform impl.
-        internal class DetachedPlatformImpl : IAutomationPeerImpl
-        {
-            public static readonly DetachedPlatformImpl Instance = new DetachedPlatformImpl();
-            private DetachedPlatformImpl() { }
-            public void Dispose() { }
-            public void PropertyChanged() { }
-            public void StructureChanged() { }
+            else if (e.Property == Visual.TransformedBoundsProperty)
+            {
+                InvalidateProperties();
+            }
+            else if (e.Property == Visual.VisualParentProperty)
+            {
+                InvalidateParent();
+            }
         }
     }
 }

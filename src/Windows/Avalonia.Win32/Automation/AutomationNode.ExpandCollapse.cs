@@ -5,7 +5,7 @@ using Avalonia.Win32.Interop.Automation;
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationProvider : IExpandCollapseProvider
+    internal partial class AutomationNode : IExpandCollapseProvider
     {
         private ExpandCollapseState _expandCollapseState;
 
@@ -13,15 +13,14 @@ namespace Avalonia.Win32.Automation
         void IExpandCollapseProvider.Expand() => InvokeSync<IOpenCloseAutomationPeer>(x => x.Open());
         void IExpandCollapseProvider.Collapse() => InvokeSync<IOpenCloseAutomationPeer>(x => x.Close());
 
-        private void UpdateExpandCollapse(bool notify)
+        private void UpdateExpandCollapse()
         {
             if (Peer is IOpenCloseAutomationPeer peer)
             {
                 UpdateProperty(
                     UiaPropertyId.ExpandCollapseExpandCollapseState,
                     ref _expandCollapseState,
-                    peer.GetIsOpen() ? ExpandCollapseState.Expanded : ExpandCollapseState.Collapsed,
-                    notify);
+                    peer.GetIsOpen() ? ExpandCollapseState.Expanded : ExpandCollapseState.Collapsed);
             }
         }
     }

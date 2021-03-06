@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Collections;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Mixins;
 using Avalonia.Controls.Primitives;
@@ -210,7 +211,10 @@ namespace Avalonia.Controls
             _pointerMovedDispose = this.AddDisposableHandler(PointerMovedEvent, TrackMoved, RoutingStrategies.Tunnel);
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer() => new SliderAutomationPeer(this);
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+        {
+            return new SliderAutomationPeer(factory, this);
+        }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {

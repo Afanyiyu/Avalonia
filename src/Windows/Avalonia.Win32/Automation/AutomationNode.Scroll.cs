@@ -7,7 +7,7 @@ using Avalonia.Win32.Interop.Automation;
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationProvider : IScrollProvider, IScrollItemProvider
+    internal partial class AutomationNode : IScrollProvider, IScrollItemProvider
     {
         private double _horizontalScrollPercent;
         private double _verticalScrollPercent;
@@ -80,44 +80,38 @@ namespace Avalonia.Win32.Automation
             InvokeSync(() => Peer.BringIntoView());
         }
 
-        private void UpdateScroll(bool notify)
+        private void UpdateScroll()
         {
             if (Peer is IScrollableAutomationPeer peer)
             {
                 UpdateProperty(
                     UiaPropertyId.ScrollHorizontalScrollPercent,
                     ref _horizontalScrollPercent,
-                    peer.GetOffset().X * 100 / (peer.GetExtent().Width - peer.GetViewport().Width),
-                    notify);
+                    peer.GetOffset().X * 100 / (peer.GetExtent().Width - peer.GetViewport().Width));
                 UpdateProperty(
                     UiaPropertyId.ScrollVerticalScrollPercent,
                     ref _verticalScrollPercent,
-                    peer.GetOffset().Y * 100 / (peer.GetExtent().Height - peer.GetViewport().Height),
-                    notify);
+                    peer.GetOffset().Y * 100 / (peer.GetExtent().Height - peer.GetViewport().Height));
                 UpdateProperty(
                     UiaPropertyId.ScrollHorizontalViewSize,
                     ref _horizontalViewSize,
                     MathUtilities.IsZero(peer.GetExtent().Width) ?
                         100 :
-                        Math.Min(100, peer.GetViewport().Width / peer.GetExtent().Width),
-                    notify);
+                        Math.Min(100, peer.GetViewport().Width / peer.GetExtent().Width));
                 UpdateProperty(
                     UiaPropertyId.ScrollVerticalViewSize,
                     ref _verticalViewSize,
                     MathUtilities.IsZero(peer.GetExtent().Height) ?
                         100 :
-                        Math.Min(100, peer.GetViewport().Height / peer.GetExtent().Height),
-                    notify);
+                        Math.Min(100, peer.GetViewport().Height / peer.GetExtent().Height));
                 UpdateProperty(
                     UiaPropertyId.ScrollHorizontallyScrollable,
                     ref _horizontallyScrollable,
-                    peer.GetExtent().Width > peer.GetViewport().Width,
-                    notify);
+                    peer.GetExtent().Width > peer.GetViewport().Width);
                 UpdateProperty(
                     UiaPropertyId.ScrollVerticallyScrollable,
                     ref _verticallyScrollable,
-                    peer.GetExtent().Height > peer.GetViewport().Height,
-                    notify);
+                    peer.GetExtent().Height > peer.GetViewport().Height);
             }
         }
     }

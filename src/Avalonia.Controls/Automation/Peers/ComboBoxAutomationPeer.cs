@@ -1,15 +1,20 @@
-﻿#nullable enable
+﻿using System.Collections.Generic;
+using Avalonia.Controls.Automation.Platform;
 
-using System.Collections.Generic;
-using Avalonia.Controls.Primitives;
-using Avalonia.Platform;
+#nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
     public class ComboBoxAutomationPeer : SelectingItemsControlAutomationPeer,
         IOpenCloseAutomationPeer
     {
-        public ComboBoxAutomationPeer(Control owner) : base(owner, AutomationRole.ComboBox) { }
+        public ComboBoxAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.ComboBox)
+            : base(factory, owner, role) 
+        {
+        }
 
         public void Close() => Owner.SetValue(ComboBox.IsDropDownOpenProperty, false);
         public bool GetIsOpen() => Owner.GetValue(ComboBox.IsDropDownOpenProperty);
@@ -25,8 +30,7 @@ namespace Avalonia.Controls.Automation.Peers
             if (Owner is ComboBox owner &&
                 Owner.GetValue(ComboBox.SelectedItemProperty) is object selection)
             {
-                var peer = new SurrogateItemPeer(owner, selection);
-                peer.CreatePlatformImpl();
+                var peer = new SurrogateItemPeer(Node.Factory, owner, selection);
                 return new[] { peer };
             }
 
@@ -49,8 +53,8 @@ namespace Avalonia.Controls.Automation.Peers
         {
             private readonly object _item;
 
-            public SurrogateItemPeer(ComboBox owner, object item)
-                : base(owner, AutomationRole.ListItem)
+            public SurrogateItemPeer(IAutomationNodeFactory factory, ComboBox owner, object item)
+                : base(factory, owner, AutomationRole.ListItem)
             {
                 _item = item;
             }

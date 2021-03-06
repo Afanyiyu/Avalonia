@@ -5,7 +5,7 @@ using Avalonia.Win32.Interop.Automation;
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationProvider : IValueProvider
+    internal partial class AutomationNode : IValueProvider
     {
         private string? _value;
 
@@ -13,11 +13,11 @@ namespace Avalonia.Win32.Automation
         bool IValueProvider.IsReadOnly => false;
         void IValueProvider.SetValue(string? value) => InvokeSync<IStringValueAutomationPeer>(x => x.SetValue(value));
 
-        private void UpdateValue(bool notify)
+        private void UpdateValue()
         {
             if (Peer is IStringValueAutomationPeer peer)
             {
-                UpdateProperty(UiaPropertyId.ValueValue, ref _value, peer.GetValue(), notify);
+                UpdateProperty(UiaPropertyId.ValueValue, ref _value, peer.GetValue());
             }
         }
     }

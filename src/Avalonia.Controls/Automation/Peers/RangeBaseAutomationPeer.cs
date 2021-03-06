@@ -1,3 +1,4 @@
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives;
 
 #nullable enable
@@ -6,8 +7,11 @@ namespace Avalonia.Controls.Automation.Peers
 {
     public class RangeBaseAutomationPeer : ControlAutomationPeer, IRangeValueAutomationPeer
     {
-        public RangeBaseAutomationPeer(Control owner, AutomationRole role)
-            : base(owner, role) 
+        public RangeBaseAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role)
+            : base(factory, owner, role) 
         {
             owner.PropertyChanged += OwnerPropertyChanged;
         }

@@ -1,4 +1,5 @@
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Platform;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
@@ -94,6 +95,9 @@ namespace Avalonia.Controls
             }
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer() => new MenuAutomationPeer(this);
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+        {
+            return new MenuAutomationPeer(factory, this);
+        }
     }
 }

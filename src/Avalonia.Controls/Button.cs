@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows.Input;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Metadata;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -339,7 +340,10 @@ namespace Avalonia.Controls
             }
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer() => new ButtonAutomationPeer(this);
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+        {
+            return new ButtonAutomationPeer(factory, this);
+        }
 
         protected override void UpdateDataValidation<T>(AvaloniaProperty<T> property, BindingValue<T> value)
         {

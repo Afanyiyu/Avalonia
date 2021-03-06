@@ -1,11 +1,16 @@
-﻿#nullable enable
+﻿using Avalonia.Controls.Automation.Platform;
+
+#nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
     public class TextAutomationPeer : ControlAutomationPeer
     {
-        public TextAutomationPeer(Control owner, AutomationRole role = AutomationRole.Text)
-            : base(owner, role) 
+        public TextAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.Text)
+            : base(factory, owner, role) 
         { 
         }
 

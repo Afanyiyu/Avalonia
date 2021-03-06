@@ -345,7 +345,7 @@ namespace Avalonia.Controls
 
             Renderer?.Dispose();
             Renderer = null;
-            
+
             var logicalArgs = new LogicalTreeAttachmentEventArgs(this, this, null);
             ((ILogical)this).NotifyDetachedFromLogicalTree(logicalArgs);
 

@@ -5,14 +5,14 @@ using Avalonia.Win32.Interop.Automation;
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationProvider : IToggleProvider
+    internal partial class AutomationNode : IToggleProvider
     {
         private ToggleState _toggleState;
 
         ToggleState IToggleProvider.ToggleState => _toggleState;
         void IToggleProvider.Toggle() => InvokeSync<IToggleableAutomationPeer>(x => x.Toggle());
 
-        private void UpdateToggle(bool notify)
+        private void UpdateToggle()
         {
             if (Peer is IToggleableAutomationPeer peer)
             {
@@ -24,8 +24,7 @@ namespace Avalonia.Win32.Automation
                         true => ToggleState.On,
                         false => ToggleState.Off,
                         null => ToggleState.Indeterminate,
-                    },
-                    notify);
+                    });
             }
         }
     }

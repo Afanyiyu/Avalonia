@@ -1,3 +1,5 @@
+using Avalonia.Controls.Automation.Platform;
+
 #nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
@@ -8,7 +10,11 @@ namespace Avalonia.Controls.Automation.Peers
     /// </summary>
     public class NoneAutomationPeer : ControlAutomationPeer
     {
-        public NoneAutomationPeer(Control owner) : base(owner, AutomationRole.None) { }
+        public NoneAutomationPeer(IAutomationNodeFactory factory, Control owner)
+            : base(factory, owner, AutomationRole.None) 
+        { 
+        }
+
         protected override bool IsControlElementCore() => false;
     }
 }

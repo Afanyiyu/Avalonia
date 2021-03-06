@@ -1,31 +1,33 @@
 using System.ComponentModel;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Input;
+using Avalonia.Platform;
 using Avalonia.VisualTree;
 
 #nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
-    public class WindowBaseAutomationPeer : ControlAutomationPeer
+    public class WindowBaseAutomationPeer : ControlAutomationPeer, IRootAutomationPeer
     {
         private Control? _focus;
 
-        public WindowBaseAutomationPeer(WindowBase owner)
-            : base(owner, AutomationRole.Window)
+        public WindowBaseAutomationPeer(IAutomationNodeFactory factory, WindowBase owner)
+            : base(factory, owner, AutomationRole.Window)
         {
         }
+
+        public ITopLevelImpl PlatformImpl => ((WindowBase)Owner).PlatformImpl;
 
         public AutomationPeer? GetFocus() => _focus is object ? GetOrCreatePeer(_focus) : null;
 
         public AutomationPeer? GetPeerFromPoint(Point p)
         {
-            return Owner.GetVisualAt(p)?
-                .FindAncestorOfType<Control>(includeSelf: true) is Control c ?
-                    GetOrCreatePeer(c) : null;
+            var hit = Owner.GetVisualAt(p)?.FindAncestorOfType<Control>(includeSelf: true);
+            return hit is object ? GetOrCreatePeer(hit) : null;
         }
 
         protected override string GetNameCore() => Owner.GetValue(Window.TitleProperty);
-        protected override AutomationPeer? GetParentCore() => null;
 
         protected void StartTrackingFocus()
         {
@@ -41,9 +43,14 @@ namespace Avalonia.Controls.Automation.Peers
         private void OnFocusChanged(IInputElement? focus)
         {
             var oldFocus = _focus;
+            
             _focus = focus?.VisualRoot == Owner ? focus as Control : null;
+            
             if (_focus != oldFocus)
-                InvalidateProperties();
+            {
+                var peer = _focus is object ? GetOrCreatePeer(_focus) : null;
+                ((IRootAutomationNode)Node).FocusChanged(peer);
+            }
         }
 
         private void KeyboardDevicePropertyChanged(object sender, PropertyChangedEventArgs e)

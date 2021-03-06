@@ -1,4 +1,5 @@
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Mixins;
 
@@ -35,6 +36,9 @@ namespace Avalonia.Controls
             set { SetValue(IsSelectedProperty, value); }
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer() => new ListItemAutomationPeer(this);
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+        {
+            return new ListItemAutomationPeer(factory, this);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
@@ -175,9 +176,9 @@ namespace Avalonia.Controls
             }
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer()
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
         {
-            return new ToggleButtonAutomationPeer(this, AutomationRole.CheckBox);
+            return new ToggleButtonAutomationPeer(factory, this, AutomationRole.CheckBox);
         }
 
         private void KnobsPanel_PointerPressed(object sender, Input.PointerPressedEventArgs e)

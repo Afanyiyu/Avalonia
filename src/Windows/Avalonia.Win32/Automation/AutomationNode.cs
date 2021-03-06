@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Automation;
 using Avalonia.Controls.Automation.Peers;
-using Avalonia.Platform;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Avalonia.Win32.Interop.Automation;
@@ -19,72 +19,64 @@ using Avalonia.Win32.Interop.Automation;
 namespace Avalonia.Win32.Automation
 {
     [ComVisible(true)]
-    internal partial class AutomationProvider : MarshalByRefObject,
-        IAutomationPeerImpl,
+    internal partial class AutomationNode : MarshalByRefObject,
+        IAutomationNode,
         IRawElementProviderSimple,
         IRawElementProviderSimple2,
         IRawElementProviderFragment,
+        IRawElementProviderAdviseEvents,
         IInvokeProvider
     {
-        private readonly UiaControlTypeId _controlType;
-        private readonly string _localizedControlType;
-        private readonly bool _isControlElement;
-        private readonly WindowImpl _visualRoot;
-        private readonly int[] _runtimeId;
-        private AutomationProvider? _parent;
-        private bool _isParentInitialized;
         private Rect _boundingRect;
-        private List<AutomationProvider>? _children;
-        private bool _childrenValid;
+        private List<AutomationNode>? _children;
         private string? _className;
-        private IRawElementProviderFragmentRoot? _fragmentRoot;
+        private UiaControlTypeId _controlType;
         private bool _hasKeyboardFocus;
-        private bool _isKeyboardFocusable;
-        private bool _isEnabled;
-        private string? _name;
+        private bool _childrenValid;
+        private bool _isControlElement;
         private bool _isDisposed;
+        private bool _isEnabled;
+        private bool _isKeyboardFocusable;
+        private string? _localizedControlType;
+        private string? _name;
+        private AutomationNode? _parent;
+        private bool _parentValid;
+        private bool _propertiesValid;
+        private RootAutomationNode? _root;
+        private bool _rootValid;
+        private int[] _runtimeId;
+        private int _raiseFocusChanged;
+        private int _raisePropertyChanged;
 
-        public AutomationProvider(ControlAutomationPeer peer)
+        public AutomationNode(AutomationPeer peer)
         {
             Dispatcher.UIThread.VerifyAccess();
 
             Peer = peer;
-
-            _controlType = RoleToControlType(peer.GetRole());
-            _localizedControlType = peer.GetLocalizedControlType();
-            _isControlElement = peer.IsControlElement();
-            _visualRoot = (WindowImpl)GetRoot(peer.Owner).PlatformImpl;
             _runtimeId = new int[] { 3, Peer.GetHashCode() };
         }
 
-        public ControlAutomationPeer Peer { get; }
-
-        public Rect BoundingRectangle 
-        { 
-            get
-            {
-                return new PixelRect(
-                    _visualRoot.PointToScreen(_boundingRect.TopLeft),
-                    _visualRoot.PointToScreen(_boundingRect.BottomRight))
-                    .ToRect(1);
-            }
-        }
-
-        public virtual IRawElementProviderFragmentRoot? FragmentRoot 
-        { 
-            get
-            {
-                return _fragmentRoot ??= InvokeSync(() =>
-                {
-                    var root = GetRoot(Peer.Owner);
-                    var rootPeer = ControlAutomationPeer.GetOrCreatePeer(root);
-                    return (IRawElementProviderFragmentRoot)rootPeer.PlatformImpl;
-                });
-            }
-        }
-
-        public ProviderOptions ProviderOptions => ProviderOptions.ServerSideProvider;
+        public AutomationPeer Peer { get; }
+        public Rect BoundingRectangle => Root?.ToScreen(_boundingRect) ?? default;
+        public IAutomationNodeFactory Factory => AutomationNodeFactory.Instance;
+        public virtual IRawElementProviderFragmentRoot? FragmentRoot => Root;
         public virtual IRawElementProviderSimple? HostRawElementProvider => null;
+        public ProviderOptions ProviderOptions => ProviderOptions.ServerSideProvider;
+
+        public RootAutomationNode? Root
+        {
+            get
+            {
+                if (!_rootValid)
+                {
+                    var _rootPeer = InvokeSync(() => Peer.GetRoot());
+                    _root = (_rootPeer as AutomationPeer)?.Node as RootAutomationNode;
+                    _rootValid = true;
+                }
+
+                return _root;
+            }
+        }
 
         public void Dispose()
         {
@@ -93,17 +85,8 @@ namespace Avalonia.Win32.Automation
             // called there.
             _isDisposed = true;
         }
-        
-        public void PropertyChanged() 
-        {
-            if (_isDisposed)
-                return;
 
-            Dispatcher.UIThread.VerifyAccess();
-            UpdateCore(true);
-        }
-        
-        public void StructureChanged() 
+        public void ChildrenChanged()
         {
             if (_isDisposed)
                 return;
@@ -114,6 +97,27 @@ namespace Avalonia.Win32.Automation
                 StructureChangeType.ChildrenInvalidated,
                 _runtimeId,
                 _runtimeId.Length);
+        }
+
+        public void ParentChanged()
+        {
+            _parent = null;
+            _parentValid = false;
+        }
+
+        public void PropertyChanged() 
+        {
+            if (_isDisposed)
+                return;
+
+            Dispatcher.UIThread.VerifyAccess();
+            UpdateCore();
+        }
+
+        public void RootChanged()
+        {
+            _root = null;
+            _rootValid = false;
         }
 
         [return: MarshalAs(UnmanagedType.IUnknown)]
@@ -141,6 +145,9 @@ namespace Avalonia.Win32.Automation
         {
             if (_isDisposed)
                 return null;
+
+            if (!_propertiesValid)
+                Update().Wait();
 
             return (UiaPropertyId)propertyId switch
             {
@@ -194,23 +201,49 @@ namespace Avalonia.Win32.Automation
             InvokeSync(() => Peer.SetFocus());
         }
 
-        public async Task Update(bool notify)
+        public async Task Update()
         {
             if (Dispatcher.UIThread.CheckAccess())
-                UpdateCore(notify);
+                UpdateCore();
             else
-                await Dispatcher.UIThread.InvokeAsync(() => Update(notify));
+                await Dispatcher.UIThread.InvokeAsync(() => Update());
+            _propertiesValid = true;
         }
 
         public override string ToString() => _className!;
         IRawElementProviderSimple[]? IRawElementProviderFragment.GetEmbeddedFragmentRoots() => null;
         void IRawElementProviderSimple2.ShowContextMenu() => InvokeSync(() => Peer.ShowContextMenu());
-
         void IInvokeProvider.Invoke() => InvokeSync<IInvocableAutomationPeer>(x => x.Invoke());
 
-        public void UpdateFocus(bool notify)
+        void IRawElementProviderAdviseEvents.AdviseEventAdded(int eventId, int[] properties)
         {
-            UpdateProperty(UiaPropertyId.HasKeyboardFocus, ref _hasKeyboardFocus, Peer.HasKeyboardFocus(), notify);
+            switch ((UiaEventId)eventId)
+            {
+                case UiaEventId.AutomationPropertyChanged:
+                    ++_raisePropertyChanged;
+                    break;
+                case UiaEventId.AutomationFocusChanged:
+                    ++_raiseFocusChanged;
+                    break;
+            }
+        }
+
+        void IRawElementProviderAdviseEvents.AdviseEventRemoved(int eventId, int[] properties)
+        {
+            switch ((UiaEventId)eventId)
+            {
+                case UiaEventId.AutomationPropertyChanged:
+                    --_raisePropertyChanged;
+                    break;
+                case UiaEventId.AutomationFocusChanged:
+                    --_raiseFocusChanged;
+                    break;
+            }
+        }
+
+        public void UpdateFocus()
+        {
+            UpdateProperty(UiaPropertyId.HasKeyboardFocus, ref _hasKeyboardFocus, Peer.HasKeyboardFocus());
         }
 
         protected void InvokeSync(Action action)
@@ -277,29 +310,41 @@ namespace Avalonia.Win32.Automation
             return default;
         }
 
-        protected virtual void UpdateCore(bool notify)
+        protected void RaiseFocusChanged(AutomationNode? focused)
         {
-            _className = Peer.GetClassName();
-
-            UpdateProperty(UiaPropertyId.BoundingRectangle, ref _boundingRect, Peer.GetBoundingRectangle(), notify);
-            UpdateProperty(UiaPropertyId.IsKeyboardFocusable, ref _isKeyboardFocusable, Peer.IsKeyboardFocusable(), notify);
-            UpdateProperty(UiaPropertyId.IsEnabled, ref _isEnabled, Peer.IsEnabled(), notify);
-            UpdateProperty(UiaPropertyId.Name, ref _name, Peer.GetName(), notify);
-            UpdateFocus(notify);
-            UpdateExpandCollapse(notify);
-            UpdateRangeValue(notify);
-            UpdateScroll(notify);
-            UpdateSelection(notify);
-            UpdateToggle(notify);
-            UpdateValue(notify);
+            if (_raiseFocusChanged > 0)
+            {
+                UiaCoreProviderApi.UiaRaiseAutomationEvent(
+                    focused,
+                    (int)UiaEventId.AutomationFocusChanged);
+            }
         }
 
-        private void UpdateProperty<T>(UiaPropertyId id, ref T _field, T value, bool notify)
+        protected virtual void UpdateCore()
+        {
+            UpdateProperty(UiaPropertyId.BoundingRectangle, ref _boundingRect, Peer.GetBoundingRectangle());
+            UpdateProperty(UiaPropertyId.ClassName, ref _className, Peer.GetClassName());
+            UpdateProperty(UiaPropertyId.ControlType, ref _controlType, RoleToControlType(Peer.GetRole()));
+            UpdateProperty(UiaPropertyId.IsControlElement, ref _isControlElement, Peer.IsControlElement());
+            UpdateProperty(UiaPropertyId.IsEnabled, ref _isEnabled, Peer.IsEnabled());
+            UpdateProperty(UiaPropertyId.IsKeyboardFocusable, ref _isKeyboardFocusable, Peer.IsKeyboardFocusable());
+            UpdateProperty(UiaPropertyId.LocalizedControlType, ref _localizedControlType, Peer.GetLocalizedControlType());
+            UpdateProperty(UiaPropertyId.Name, ref _name, Peer.GetName());
+            UpdateFocus();
+            UpdateExpandCollapse();
+            UpdateRangeValue();
+            UpdateScroll();
+            UpdateSelection();
+            UpdateToggle();
+            UpdateValue();
+        }
+
+        private void UpdateProperty<T>(UiaPropertyId id, ref T _field, T value)
         {
             if (!EqualityComparer<T>.Default.Equals(_field, value))
             {
                 _field = value;
-                if (notify)
+                if (_raisePropertyChanged > 0)
                     UiaCoreProviderApi.UiaRaiseAutomationPropertyChangedEvent(this, (int)id, null, null);
             }
         }
@@ -324,9 +369,9 @@ namespace Avalonia.Win32.Automation
 
             foreach (var childPeer in childPeers)
             {
-                _children ??= new List<AutomationProvider>();
+                _children ??= new List<AutomationNode>();
 
-                if (childPeer.PlatformImpl is AutomationProvider child)
+                if (childPeer.Node is AutomationNode child)
                 {
                     _children.Add(child);
                 }
@@ -338,18 +383,18 @@ namespace Avalonia.Win32.Automation
             }
         }
 
-        private AutomationProvider? GetParent()
+        private AutomationNode? GetParent()
         {
-            if (!_isParentInitialized)
+            if (!_parentValid)
             {
-                _parent = InvokeSync(() => Peer.GetParent())?.PlatformImpl as AutomationProvider;
-                _isParentInitialized = true;
+                _parent = InvokeSync(() => Peer.GetParent())?.Node as AutomationNode;
+                _parentValid = true;
             }
 
             return _parent;
         }
 
-        private AutomationProvider? GetSibling(AutomationProvider child, int direction)
+        private AutomationNode? GetSibling(AutomationNode child, int direction)
         {
             EnsureChildren();
 
@@ -368,10 +413,30 @@ namespace Avalonia.Win32.Automation
             return null;
         }
 
-        private static WindowBase GetRoot(Control control)
+        private AutomationPeer GetPeer(Control control)
         {
-            return control.GetVisualRoot() as WindowBase ??
-                throw new AvaloniaInternalException("Cannot create automation provider for non-rooted control.");
+            return ControlAutomationPeer.GetOrCreatePeer(Factory, control);
+        }
+
+        private WindowBaseAutomationPeer? GetRootPeer(AutomationPeer peer)
+        {
+            if (peer is WindowBaseAutomationPeer peerAsRoot)
+            {
+                return peerAsRoot;
+            }
+            else if (peer is ControlAutomationPeer controlPeer &&
+                controlPeer.Owner.GetVisualRoot() is Control rootControl &&
+                GetPeer(rootControl) is WindowBaseAutomationPeer rootPeer)
+            {
+                return rootPeer;
+            }
+
+            return null;
+        }
+
+        private WindowImpl? GetRootWindowImpl(AutomationPeer peer)
+        {
+            return (GetRootPeer(peer)?.Node as RootAutomationNode)?.WindowImpl;
         }
 
         private static UiaControlTypeId RoleToControlType(AutomationRole role)

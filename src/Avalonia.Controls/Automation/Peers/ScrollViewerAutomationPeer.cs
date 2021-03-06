@@ -1,9 +1,16 @@
-﻿namespace Avalonia.Controls.Automation.Peers
+﻿using Avalonia.Controls.Automation.Platform;
+
+#nullable enable
+
+namespace Avalonia.Controls.Automation.Peers
 {
     public class ScrollViewerAutomationPeer : ControlAutomationPeer, IScrollableAutomationPeer
     {
-        public ScrollViewerAutomationPeer(Control owner, AutomationRole role = AutomationRole.ScrollArea)
-            : base(owner, role)
+        public ScrollViewerAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.ScrollArea)
+            : base(factory, owner, role)
         {
         }
 

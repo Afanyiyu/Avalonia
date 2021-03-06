@@ -1,5 +1,6 @@
 using System;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Platform;
 using Avalonia.Win32.Interop;
@@ -166,15 +167,5 @@ namespace Avalonia.Win32
         }
 
         public IPopupPositioner PopupPositioner { get; }
-
-        public override IAutomationPeerImpl CreateAutomationPeerImpl(AutomationPeer peer)
-        {
-            var w = _parent;
-
-            while (w is PopupImpl popup)
-                w = popup._parent;
-
-            return ((WindowImpl)w).CreateAutomationPeerImpl(peer, this);
-        }
     }
 }

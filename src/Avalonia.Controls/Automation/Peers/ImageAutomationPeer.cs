@@ -1,9 +1,16 @@
-﻿namespace Avalonia.Controls.Automation.Peers
+﻿using Avalonia.Controls.Automation.Platform;
+
+#nullable enable
+
+namespace Avalonia.Controls.Automation.Peers
 {
     public class ImageAutomationPeer : ControlAutomationPeer
     {
-        public ImageAutomationPeer(Control owner, AutomationRole role = AutomationRole.Image)
-            : base(owner, role)
+        public ImageAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.Image)
+            : base(factory, owner, role)
         {
         }
     }

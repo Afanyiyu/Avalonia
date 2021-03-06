@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
@@ -204,9 +205,12 @@ namespace Avalonia.Controls
             }
         }
 
-        protected virtual AutomationPeer OnCreateAutomationPeer() => new NoneAutomationPeer(this);
+        protected virtual AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+        {
+            return new NoneAutomationPeer(factory, this);
+        }
 
-        internal AutomationPeer GetOrCreateAutomationPeer()
+        internal AutomationPeer GetOrCreateAutomationPeer(IAutomationNodeFactory factory)
         {
             VerifyAccess();
 
@@ -215,8 +219,7 @@ namespace Avalonia.Controls
                 return _automationPeer;
             }
 
-            _automationPeer = OnCreateAutomationPeer();
-            _automationPeer.CreatePlatformImpl();
+            _automationPeer = OnCreateAutomationPeer(factory);
             return _automationPeer;
         }
     }

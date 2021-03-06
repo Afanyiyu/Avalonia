@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
@@ -28,8 +29,7 @@ namespace Avalonia.Win32
     /// </summary>
     public partial class WindowImpl : IWindowImpl,
         EglGlPlatformSurface.IEglWindowGlPlatformSurfaceInfo,
-        ITopLevelImplWithNativeControlHost,
-        IPlatformAutomationInterface
+        ITopLevelImplWithNativeControlHost
     {
         private static readonly List<WindowImpl> s_instances = new List<WindowImpl>();
 
@@ -87,7 +87,7 @@ namespace Avalonia.Win32
         private POINT _maxTrackSize;
         private WindowImpl _parent;        
         private ExtendClientAreaChromeHints _extendChromeHints = ExtendClientAreaChromeHints.Default;
-        private AutomationProvider _automationProvider;
+        private AutomationNode _automationProvider;
         private bool _isCloseRequested;
 
         public WindowImpl()
@@ -680,16 +680,6 @@ namespace Avalonia.Win32
             _topmost = value;
         }
 
-        public virtual IAutomationPeerImpl CreateAutomationPeerImpl(AutomationPeer peer)
-        {
-            return CreateAutomationPeerImpl(peer, this);
-        }
-
-        public IAutomationPeerImpl CreateAutomationPeerImpl(AutomationPeer peer, WindowImpl visualRoot)
-        {
-            return AutomationProviderFactory.Create(peer);
-        }
-
         protected virtual IntPtr CreateWindowOverride(ushort atom)
         {
             return CreateWindowEx(
@@ -1265,12 +1255,12 @@ namespace Avalonia.Win32
         /// <inheritdoc/>
         public AcrylicPlatformCompensationLevels AcrylicCompensationLevels { get; } = new AcrylicPlatformCompensationLevels(1, 0.8, 0);
 
-        internal AutomationProvider GetOrCreateAutomationProvider()
+        internal AutomationNode GetOrCreateAutomationProvider()
         {
             if (_automationProvider is null)
             {
-                var peer = ControlAutomationPeer.GetOrCreatePeer((Control)_owner);
-                _automationProvider = peer.PlatformImpl as AutomationProvider;
+                var peer = ControlAutomationPeer.GetOrCreatePeer(AutomationNodeFactory.Instance, (Control)_owner);
+                _automationProvider = peer.Node as AutomationNode;
             }
 
             return _automationProvider;

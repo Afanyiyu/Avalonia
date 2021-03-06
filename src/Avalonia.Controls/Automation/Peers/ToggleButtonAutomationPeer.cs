@@ -1,13 +1,17 @@
-﻿#nullable enable
-
+﻿using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives;
+
+#nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
     public class ToggleButtonAutomationPeer : ContentControlAutomationPeer, IToggleableAutomationPeer
     {
-        public ToggleButtonAutomationPeer(Control owner, AutomationRole role = AutomationRole.Toggle)
-            : base(owner, role)
+        public ToggleButtonAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.Toggle)
+            : base(factory, owner, role)
         {
         }
 

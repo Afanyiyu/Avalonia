@@ -1,4 +1,5 @@
 using System;
+using Avalonia.Controls.Automation.Platform;
 
 #nullable enable
 
@@ -6,8 +7,10 @@ namespace Avalonia.Controls.Automation.Peers
 {
     public class WindowAutomationPeer : WindowBaseAutomationPeer
     {
-        public WindowAutomationPeer(Window owner)
-            : base(owner)
+        public WindowAutomationPeer(
+            IAutomationNodeFactory factory,
+            Window owner)
+            : base(factory, owner)
         {
             if (owner.IsVisible)
                 StartTrackingFocus();
@@ -26,7 +29,6 @@ namespace Avalonia.Controls.Automation.Peers
         {
             ((Window)Owner).Closed -= OnClosed;
             StopTrackingFocus();
-            InvalidatePlatformImpl();
         }
     }
 }

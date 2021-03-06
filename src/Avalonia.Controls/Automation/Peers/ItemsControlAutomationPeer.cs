@@ -1,4 +1,6 @@
-﻿#nullable enable
+﻿using Avalonia.Controls.Automation.Platform;
+
+#nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
@@ -7,8 +9,11 @@ namespace Avalonia.Controls.Automation.Peers
         private bool _searchedForScrollable;
         private IScrollableAutomationPeer? _scroller;
 
-        public ItemsControlAutomationPeer(Control owner, AutomationRole role = AutomationRole.List)
-            : base(owner, role)
+        public ItemsControlAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.List)
+            : base(factory, owner, role)
         {
         }
 

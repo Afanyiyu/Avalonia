@@ -1,12 +1,16 @@
-﻿#nullable enable
+﻿using Avalonia.Controls.Automation.Platform;
 
+#nullable enable
 
 namespace Avalonia.Controls.Automation.Peers
 {
     public class ContentControlAutomationPeer : ControlAutomationPeer
     {
-        protected ContentControlAutomationPeer(Control owner, AutomationRole role)
-            : base(owner, role) 
+        protected ContentControlAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role)
+            : base(factory, owner, role) 
         { 
         }
 

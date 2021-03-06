@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Selection;
 using Avalonia.VisualTree;
@@ -14,9 +15,10 @@ namespace Avalonia.Controls.Automation.Peers
         private ISelectionModel _selection;
 
         protected SelectingItemsControlAutomationPeer(
+            IAutomationNodeFactory factory,
             Control owner,
             AutomationRole role = AutomationRole.List)
-            : base(owner, role) 
+            : base(factory, owner, role) 
         {
             _selection = owner.GetValue(ListBox.SelectionProperty);
             _selection.SelectionChanged += OwnerSelectionChanged;

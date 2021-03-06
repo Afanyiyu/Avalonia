@@ -1,8 +1,18 @@
-﻿namespace Avalonia.Controls.Automation.Peers
+﻿using Avalonia.Controls.Automation.Platform;
+
+#nullable enable
+
+namespace Avalonia.Controls.Automation.Peers
 {
     public class TabControlAutomationPeer : SelectingItemsControlAutomationPeer
     {
-        public TabControlAutomationPeer(Control owner) : base(owner, AutomationRole.TabControl) { }
+        public TabControlAutomationPeer(
+            IAutomationNodeFactory factory,
+            Control owner,
+            AutomationRole role = AutomationRole.TabControl)
+            : base(factory, owner, role) 
+        {
+        }
 
         protected override string GetLocalizedControlTypeCore() => "tab control";
     }

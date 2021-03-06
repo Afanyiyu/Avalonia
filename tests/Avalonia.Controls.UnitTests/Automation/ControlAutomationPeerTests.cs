@@ -1,11 +1,9 @@
 ﻿using System.Linq;
 using Avalonia.Controls.Automation.Peers;
-using Avalonia.Controls.Platform;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Controls.Templates;
-using Avalonia.Input;
 using Avalonia.Platform;
 using Avalonia.UnitTests;
 using Avalonia.VisualTree;
@@ -16,251 +14,39 @@ namespace Avalonia.Controls.UnitTests.Automation
 {
     public class ControlAutomationPeerTests
     {
-        [Fact]
-        public void Creates_Children_For_Controls_In_Visual_Tree()
+        private static Mock<IAutomationNodeFactory> _factory;
+
+        public ControlAutomationPeerTests()
         {
-            var panel = new Panel
-            {
-                Children =
-                {
-                    new Border(),
-                    new Border(),
-                },
-            };
-
-            var root = new AutomationTestRoot(panel);
-            var target = ControlAutomationPeer.GetOrCreatePeer(panel);
-
-            Assert.Equal(
-                panel.GetVisualChildren(),
-                target.GetChildren().Cast<ControlAutomationPeer>().Select(x => x.Owner));
+            _factory = new Mock<IAutomationNodeFactory>();
+            _factory.Setup(x => x.CreateNode(It.IsAny<AutomationPeer>()))
+                .Returns(() => Mock.Of<IAutomationNode>(x => x.Factory == _factory));
         }
 
-        [Fact]
-        public void Creates_Children_when_Controls_Attached_To_Visual_Tree()
+        public class Children
         {
-            var contentControl = new ContentControl
+            [Fact]
+            public void Creates_Children_For_Controls_In_Visual_Tree()
             {
-                Template = new FuncControlTemplate<ContentControl>((o, ns) =>
-                    new ContentPresenter
+                var panel = new Panel
+                {
+                    Children =
                     {
-                        Name = "PART_ContentPresenter",
-                        [!ContentPresenter.ContentProperty] = o[!ContentControl.ContentProperty],
-                    }),
-                Content = new Border(),
-            };
-
-            var root = new AutomationTestRoot(contentControl);
-            var target = ControlAutomationPeer.GetOrCreatePeer(contentControl);
-
-            Assert.Empty(target.GetChildren());
-
-            contentControl.Measure(Size.Infinity);
-
-            Assert.Equal(1, target.GetChildren().Count);
-        }
-
-        [Fact]
-        public void Updates_Children_When_VisualChildren_Added()
-        {
-            var panel = new Panel
-            {
-                Children =
-                {
-                    new Border(),
-                    new Border(),
-                },
-            };
-
-            var root = new AutomationTestRoot(panel);
-            var target = ControlAutomationPeer.GetOrCreatePeer(panel);
-            var children = target.GetChildren();
-
-            Assert.Equal(2, children.Count);
-
-            panel.Children.Add(new Decorator());
-
-            children = target.GetChildren();
-            Assert.Equal(3, children.Count);
-        }
-
-        [Fact]
-        public void Updates_Children_When_VisualChildren_Removed()
-        {
-            var panel = new Panel
-            {
-                Children =
-                {
-                    new Border(),
-                    new Border(),
-                },
-            };
-
-            var root = new AutomationTestRoot(panel);
-            var target = ControlAutomationPeer.GetOrCreatePeer(panel);
-            var children = target.GetChildren();
-
-            Assert.Equal(2, children.Count);
-
-            panel.Children.RemoveAt(1);
-
-            children = target.GetChildren();
-            Assert.Equal(1, children.Count);
-        }
-
-        [Fact]
-        public void Updates_Children_When_Visibility_Changes()
-        {
-            var panel = new Panel
-            {
-                Children =
-                {
-                    new Border(),
-                    new Border(),
-                },
-            };
-
-            var root = new AutomationTestRoot(panel);
-            var target = ControlAutomationPeer.GetOrCreatePeer(panel);
-            var children = target.GetChildren();
-
-            Assert.Equal(2, children.Count);
-
-            panel.Children[1].IsVisible = false;
-            children = target.GetChildren();
-            Assert.Equal(1, children.Count);
-
-            panel.Children[1].IsVisible = true;
-            children = target.GetChildren();
-            Assert.Equal(2, children.Count);
-        }
-
-        [Fact]
-        public void Exposes_Children_In_Control_Templates_With_IsControl_False()
-        {
-            var button = new Button
-            {
-                Template = new FuncControlTemplate<Button>((x, _) => new Border()),
-            };
-
-            button.ApplyTemplate();
-
-            var root = new AutomationTestRoot(button);
-            var target = ControlAutomationPeer.GetOrCreatePeer(button);
-            var children = target.GetChildren();
-
-            Assert.Equal(1, children.Count);
-            Assert.IsType<Border>(((ControlAutomationPeer)children[0]).Owner);
-            Assert.True(target.IsControlElement());
-            Assert.False(children[0].IsControlElement());
-        }
-
-        public class PlatformImpl
-        {
-            [Fact]
-            public void PlatformImpl_Is_Created_For_Rooted_Control()
-            {
-                var target = new TestControl();
-                var root = new AutomationTestRoot(target);
-                var peer = ControlAutomationPeer.GetOrCreatePeer(target);
-
-                Assert.IsType<TestAutomationPeer>(peer);
-                Assert.NotNull(peer.PlatformImpl);
-                Assert.NotNull(Mock.Get(peer.PlatformImpl));
-            }
-
-            [Fact]
-            public void Detched_PlatformImpl_Is_Created_For_Nonrooted_Control()
-            {
-                var target = new TestControl();
-                var peer = ControlAutomationPeer.GetOrCreatePeer(target);
-
-                Assert.NotNull(peer.PlatformImpl);
-                Assert.IsType<ControlAutomationPeer.DetachedPlatformImpl>(peer.PlatformImpl);
-            }
-
-            [Fact]
-            public void PlatformImpl_Is_Disposed_When_Removed_From_Tree()
-            {
-                var target = new TestControl();
-                var root = new AutomationTestRoot(target);
-                var peer = ControlAutomationPeer.GetOrCreatePeer(target);
-                var peerImplMock = Mock.Get(peer.PlatformImpl);
-
-                root.Content = null;
-
-                peerImplMock.Verify(x => x.Dispose());
-                Assert.IsType<ControlAutomationPeer.DetachedPlatformImpl>(peer.PlatformImpl);
-            }
-
-            [Fact]
-            public void PlatformImpl_Is_Recreated_When_Reattached_To_Tree()
-            {
-                var target = new TestControl();
-                var root = new AutomationTestRoot(target);
-                var peer = ControlAutomationPeer.GetOrCreatePeer(target);
-                var peerImpl1 = peer.PlatformImpl;
-
-                root.Content = null;
-                root.Content = target;
-
-                var peerImpl2 = peer.PlatformImpl;
-
-                Assert.NotNull(peerImpl1);
-                Assert.NotNull(peerImpl2);
-                Assert.NotSame(peerImpl1, peerImpl2);
-                Assert.IsNotType<ControlAutomationPeer.DetachedPlatformImpl>(peerImpl1);
-                Assert.IsNotType<ControlAutomationPeer.DetachedPlatformImpl>(peerImpl2);
-            }
-
-            [Fact]
-            public void Notifies_PlatformImpl_Of_Child_Added()
-            {
-                var panel = new Panel
-                {
-                    Children =
-                {
-                    new Border(),
-                    new Border(),
-                },
+                        new Border(),
+                        new Border(),
+                    },
                 };
 
-                var root = new AutomationTestRoot(panel);
-                var target = ControlAutomationPeer.GetOrCreatePeer(panel);
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, panel);
 
-                var platformImplMock = Mock.Get(target.PlatformImpl);
-                platformImplMock.Invocations.Clear();
-
-                panel.Children.Add(new Decorator());
-
-                platformImplMock.Verify(x => x.StructureChanged());
+                Assert.Equal(
+                    panel.GetVisualChildren(),
+                    target.GetChildren().Cast<ControlAutomationPeer>().Select(x => x.Owner));
             }
 
             [Fact]
-            public void Notifies_PlatformImpl_Of_Child_Removed()
-            {
-                var panel = new Panel
-                {
-                    Children =
-                {
-                    new Border(),
-                    new Border(),
-                },
-                };
-
-                var root = new AutomationTestRoot(panel);
-                var target = ControlAutomationPeer.GetOrCreatePeer(panel);
-
-                var platformImplMock = Mock.Get(target.PlatformImpl);
-                platformImplMock.Invocations.Clear();
-
-                panel.Children.RemoveAt(1);
-
-                platformImplMock.Verify(x => x.StructureChanged());
-            }
-
-            [Fact]
-            public void Notifies_PlatformImpl_Of_Child_Being_Attached_To_Visual_Tree()
+            public void Creates_Children_when_Controls_Attached_To_Visual_Tree()
             {
                 var contentControl = new ContentControl
                 {
@@ -273,119 +59,251 @@ namespace Avalonia.Controls.UnitTests.Automation
                     Content = new Border(),
                 };
 
-                var root = new AutomationTestRoot(contentControl);
-                var target = ControlAutomationPeer.GetOrCreatePeer(contentControl);
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, contentControl);
 
                 Assert.Empty(target.GetChildren());
-
-                var platformImplMock = Mock.Get(target.PlatformImpl);
-                platformImplMock.Invocations.Clear();
-
-                contentControl.Measure(Size.Infinity);
-
-                platformImplMock.Verify(x => x.StructureChanged());
-            }
-
-            [Fact]
-            public void Notifies_PlatformImpl_Of_Child_Being_Detached_From_Visual_Tree()
-            {
-                var contentControl = new ContentControl
-                {
-                    Template = new FuncControlTemplate<ContentControl>((o, ns) =>
-                        new ContentPresenter
-                        {
-                            Name = "PART_ContentPresenter",
-                            [!ContentPresenter.ContentProperty] = o[!ContentControl.ContentProperty],
-                        }),
-                    Content = new Border(),
-                };
-
-                var root = new AutomationTestRoot(contentControl);
-                var target = ControlAutomationPeer.GetOrCreatePeer(contentControl);
 
                 contentControl.Measure(Size.Infinity);
 
                 Assert.Equal(1, target.GetChildren().Count);
-
-                var platformImplMock = Mock.Get(target.PlatformImpl);
-                platformImplMock.Invocations.Clear();
-
-                contentControl.Template = null;
-                contentControl.Measure(Size.Infinity);
-
-                platformImplMock.Verify(x => x.StructureChanged());
             }
 
             [Fact]
-            public void PlatformImpl_Is_Disposed_When_Owning_Popup_Is_Closed()
+            public void Updates_Children_When_VisualChildren_Added()
             {
-                using var app = UnitTestApplication.Start(TestServices.StyledWindow);
-                var button = new Button();
-                var popup = new Popup { Child = button };
-                var root = new AutomationTestRoot(popup);
+                var panel = new Panel
+                {
+                    Children =
+                    {
+                        new Border(),
+                        new Border(),
+                    },
+                };
 
-                popup.IsOpen = true;
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, panel);
+                var children = target.GetChildren();
 
-                var target = ControlAutomationPeer.GetOrCreatePeer(button);
-                var platformImplMock = Mock.Get(target.PlatformImpl);
+                Assert.Equal(2, children.Count);
 
-                platformImplMock.Verify(x => x.Dispose(), Times.Never);
+                panel.Children.Add(new Decorator());
 
-                popup.IsOpen = false;
-
-                platformImplMock.Verify(x => x.Dispose(), Times.Once);
+                children = target.GetChildren();
+                Assert.Equal(3, children.Count);
             }
+
+            [Fact]
+            public void Updates_Children_When_VisualChildren_Removed()
+            {
+                var panel = new Panel
+                {
+                    Children =
+                    {
+                        new Border(),
+                        new Border(),
+                    },
+                };
+
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, panel);
+                var children = target.GetChildren();
+
+                Assert.Equal(2, children.Count);
+
+                panel.Children.RemoveAt(1);
+
+                children = target.GetChildren();
+                Assert.Equal(1, children.Count);
+            }
+
+            [Fact]
+            public void Updates_Children_When_Visibility_Changes()
+            {
+                var panel = new Panel
+                {
+                    Children =
+                    {
+                        new Border(),
+                        new Border(),
+                    },
+                };
+
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, panel);
+                var children = target.GetChildren();
+
+                Assert.Equal(2, children.Count);
+
+                panel.Children[1].IsVisible = false;
+                children = target.GetChildren();
+                Assert.Equal(1, children.Count);
+
+                panel.Children[1].IsVisible = true;
+                children = target.GetChildren();
+                Assert.Equal(2, children.Count);
+            }
+        }
+
+        public class Parent
+        {
+            [Fact]
+            public void Connects_Peer_To_Tree_When_GetParent_Called()
+            {
+                var border = new Border();
+                var tree = new Decorator
+                {
+                    Child = new Decorator
+                    {
+                        Child = border,
+                    }
+                };
+
+                var factory = CreateFactory();
+
+                // We're accessing Border directly without going via its ancestors. Because the tree
+                // is built lazily, ensure that calling GetParent causes the ancestor tree to be built.
+                var target = CreatePeer(factory, border);
+
+                var parentPeer = Assert.IsAssignableFrom<ControlAutomationPeer>(target.GetParent());
+                Assert.Same(border.GetVisualParent(), parentPeer.Owner);
+            }
+
+            [Fact]
+            public void Parent_Updated_When_Moved_To_Separate_Visual_Tree()
+            {
+                var border = new Border();
+                var root1 = new Decorator { Child = border };
+                var root2 = new Decorator();
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, border);
+
+                var parentPeer = Assert.IsAssignableFrom<ControlAutomationPeer>(target.GetParent());
+                Assert.Same(root1, parentPeer.Owner);
+
+                root1.Child = null;
+
+                Assert.Null(target.GetParent());
+
+                root2.Child = border;
+
+                parentPeer = Assert.IsAssignableFrom<ControlAutomationPeer>(target.GetParent());
+                Assert.Same(root2, parentPeer.Owner);
+            }
+        }
+
+        public class Root
+        {
+            [Fact]
+            public void Root_Is_Self_For_Root_Peer()
+            {
+                var root = new AutomationTestRoot();
+                var factory = CreateFactory();
+                var target = CreatePeer(factory, root);
+
+                Assert.Same(target, target.GetRoot());
+            }
+
+            [Fact]
+            public void Root_Is_Set_For_Descendants()
+            {
+                var root = new AutomationTestRoot
+                {
+                    Child = new Decorator
+                    {
+                        Child = new Border(),
+                    }
+                };
+
+                var factory = CreateFactory();
+                var rootPeer = CreatePeer(factory, root);
+
+                Assert.Same(rootPeer, rootPeer.GetChildren()[0].GetRoot());
+                Assert.Same(rootPeer, rootPeer.GetChildren()[0].GetChildren()[0].GetRoot());
+            }
+
+            [Fact]
+            public void Root_Updated_When_Moved_To_Separate_Visual_Tree()
+            {
+                var canvas = new Canvas();
+                var border = new Border { Child = canvas };
+                var root1 = new AutomationTestRoot { Child = border };
+                var root2 = new AutomationTestRoot();
+                var factory = CreateFactory();
+                var root1Peer = CreatePeer(factory, root1);
+                var root2Peer = CreatePeer(factory, root2);
+                var borderPeer = CreatePeer(factory, border);
+                var canvasPeer = CreatePeer(factory, canvas);
+
+                Assert.Same(root1Peer, borderPeer.GetRoot());
+                Assert.Same(root1Peer, canvasPeer.GetRoot());
+
+                root1.Child = null;
+
+                Assert.Null(borderPeer.GetRoot());
+                Assert.Null(canvasPeer.GetRoot());
+
+                root2.Child = border;
+
+                Assert.Same(root2Peer, borderPeer.GetRoot());
+                Assert.Same(root2Peer, canvasPeer.GetRoot());
+            }
+        }
+
+        private static IAutomationNodeFactory CreateFactory()
+        {
+            var factory = new Mock<IAutomationNodeFactory>();
+            factory.Setup(x => x.CreateNode(It.IsAny<AutomationPeer>()))
+                .Returns(() => Mock.Of<IAutomationNode>(x => x.Factory == factory.Object));
+            return factory.Object;
+        }
+
+        private static AutomationPeer CreatePeer(IAutomationNodeFactory factory, Control control)
+        {
+            return ControlAutomationPeer.GetOrCreatePeer(factory, control);
         }
 
         private class TestControl : Control
         {
-            protected override AutomationPeer OnCreateAutomationPeer() => new TestAutomationPeer(this);
+            protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+            {
+                return new TestAutomationPeer(factory, this);
+            }
+        }
+
+        private class AutomationTestRoot : TestRoot
+        {
+            protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
+            {
+                return new TestRootAutomationPeer(factory, this);
+            }
         }
 
         private class TestAutomationPeer : ControlAutomationPeer
         {
-            public TestAutomationPeer(Control owner) : base(owner, AutomationRole.Custom) { }
+            public TestAutomationPeer(IAutomationNodeFactory factory, Control owner)
+                : base(factory, owner, AutomationRole.Custom) 
+            {
+            }
         }
 
-        private class AutomationTestRoot : TopLevel
+        private class TestRootAutomationPeer : ControlAutomationPeer, IRootAutomationPeer
         {
-            public AutomationTestRoot() : base(CreateImpl())
+            public TestRootAutomationPeer(IAutomationNodeFactory factory, Control owner)
+                : base(factory, owner, AutomationRole.Custom)
             {
-                Template = new FuncControlTemplate<AutomationTestRoot>((x, ns) => new ContentPresenter
-                {
-                    Name = "PART_ContentPresenter",
-                    [!ContentPresenter.ContentProperty] = x[!ContentProperty],
-                });
-                ApplyTemplate();
             }
 
-            public AutomationTestRoot(IControl child) : this() { Content = child; }
+            public ITopLevelImpl PlatformImpl => throw new System.NotImplementedException();
 
-            private static IWindowBaseImpl CreateImpl()
+            public AutomationPeer GetFocus()
             {
-                var windowImpl = MockWindowingPlatform.CreateWindowMock();
-                var windowAutomation = windowImpl.As<IPlatformAutomationInterface>();
-
-                windowAutomation.Setup(x => x.CreateAutomationPeerImpl(It.IsAny<AutomationPeer>()))
-                    .Returns(() => Mock.Of<IAutomationPeerImpl>());
-
-                windowImpl.Setup(x => x.CreatePopup()).Returns(() =>
-                {
-                    var popupImpl = MockWindowingPlatform.CreatePopupMock(windowImpl.Object);
-                    var popupAutomation = popupImpl.As<IPlatformAutomationInterface>();
-                    popupAutomation.Setup(x => x.CreateAutomationPeerImpl(It.IsAny<AutomationPeer>()))
-                        .Returns(() => Mock.Of<IAutomationPeerImpl>());
-                    return popupImpl.Object;
-                });
-
-                return windowImpl.Object;
+                throw new System.NotImplementedException();
             }
 
-            private static void AddAutomationFactory(Mock<IWindowImpl> impl)
+            public AutomationPeer GetPeerFromPoint(Point p)
             {
-                var automationInterface = impl.As<IPlatformAutomationInterface>();
-                automationInterface.Setup(x => x.CreateAutomationPeerImpl(It.IsAny<AutomationPeer>()))
-                    .Returns(() => Mock.Of<IAutomationPeerImpl>());
+                throw new System.NotImplementedException();
             }
         }
     }

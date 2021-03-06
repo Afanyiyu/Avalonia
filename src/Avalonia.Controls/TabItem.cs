@@ -1,4 +1,5 @@
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Controls.Automation.Platform;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Mixins;
 using Avalonia.Controls.Primitives;
@@ -82,9 +83,9 @@ namespace Avalonia.Controls
             }          
         }
 
-        protected override AutomationPeer OnCreateAutomationPeer()
+        protected override AutomationPeer OnCreateAutomationPeer(IAutomationNodeFactory factory)
         {
-            return new ListItemAutomationPeer(this, AutomationRole.TabItem);
+            return new ListItemAutomationPeer(factory, this, AutomationRole.TabItem);
         }
     }
 }
