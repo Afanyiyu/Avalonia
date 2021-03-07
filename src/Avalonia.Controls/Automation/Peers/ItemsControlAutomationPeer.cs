@@ -19,6 +19,18 @@ namespace Avalonia.Automation.Peers
         {
         }
 
+        public bool HorizontallyScrollable => _scroller?.HorizontallyScrollable ?? false;
+
+        public double HorizontalScrollPercent => _scroller?.HorizontalScrollPercent ?? -1;
+
+        public double HorizontalViewSize => _scroller?.HorizontalViewSize ?? 0;
+
+        public bool VerticallyScrollable => _scroller?.VerticallyScrollable ?? false;
+
+        public double VerticalScrollPercent => _scroller?.VerticalScrollPercent ?? -1;
+
+        public double VerticalViewSize => _scroller?.VerticalViewSize ?? 0;
+
         protected virtual IScrollProvider? Scroller
         {
             get
@@ -34,17 +46,14 @@ namespace Avalonia.Automation.Peers
             }
         }
 
-        Size IScrollProvider.GetExtent() => Scroller?.GetExtent() ?? default;
-        Size IScrollProvider.GetViewport() => Scroller?.GetViewport() ?? default;
-        Vector IScrollProvider.GetOffset() => Scroller?.GetOffset() ?? default;
-        void IScrollProvider.SetOffset(Vector value) => Scroller?.SetOffset(value);
-        void IScrollProvider.LineDown() => Scroller?.LineDown();
-        void IScrollProvider.LineLeft() => Scroller?.LineLeft();
-        void IScrollProvider.LineRight() => Scroller?.LineRight();
-        void IScrollProvider.LineUp() => Scroller?.LineUp();
-        void IScrollProvider.PageDown() => Scroller?.PageDown();
-        void IScrollProvider.PageLeft() => Scroller?.PageLeft();
-        void IScrollProvider.PageRight() => Scroller?.PageRight();
-        void IScrollProvider.PageUp() => Scroller?.PageUp();
+        public void Scroll(ScrollAmount horizontalAmount, ScrollAmount verticalAmount)
+        {
+            _scroller?.Scroll(horizontalAmount, verticalAmount);
+        }
+
+        public void SetScrollPercent(double horizontalPercent, double verticalPercent)
+        {
+            _scroller?.SetScrollPercent(horizontalPercent, verticalPercent);
+        }
     }
 }

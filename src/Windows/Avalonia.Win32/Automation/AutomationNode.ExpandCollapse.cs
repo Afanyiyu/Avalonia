@@ -1,28 +1,19 @@
 ﻿using Avalonia.Automation;
-using Avalonia.Win32.Interop.Automation;
-using AAP = Avalonia.Automation.Provider;
+using Avalonia.Automation.Provider;
+using UIA = Avalonia.Win32.Interop.Automation;
 
 #nullable enable
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationNode : IExpandCollapseProvider
+    internal partial class AutomationNode : UIA.IExpandCollapseProvider
     {
-        private ExpandCollapseState _expandCollapseState;
-
-        ExpandCollapseState IExpandCollapseProvider.ExpandCollapseState => _expandCollapseState;
-        void IExpandCollapseProvider.Expand() => InvokeSync((AAP.IExpandCollapseProvider x) => x.Expand());
-        void IExpandCollapseProvider.Collapse() => InvokeSync((AAP.IExpandCollapseProvider x) => x.Collapse());
-
-        private void UpdateExpandCollapse()
+        public ExpandCollapseState ExpandCollapseState
         {
-            if (Peer is AAP.IExpandCollapseProvider peer)
-            {
-                UpdateProperty(
-                    UiaPropertyId.ExpandCollapseExpandCollapseState,
-                    ref _expandCollapseState,
-                    peer.ExpandCollapseState);
-            }
+            get => InvokeSync<IExpandCollapseProvider, ExpandCollapseState>(x => x.ExpandCollapseState);
         }
+
+        public void Expand() => InvokeSync<IExpandCollapseProvider>(x => x.Expand());
+        public void Collapse() => InvokeSync<IExpandCollapseProvider>(x => x.Collapse());
     }
 }

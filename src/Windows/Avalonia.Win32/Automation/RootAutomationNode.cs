@@ -43,7 +43,6 @@ namespace Avalonia.Win32.Automation
         public void FocusChanged(AutomationPeer? focus)
         {
             var node = focus?.Node as AutomationNode;
-            node?.UpdateFocus();
             RaiseFocusChanged(node);
         }
 

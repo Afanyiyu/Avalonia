@@ -73,12 +73,18 @@ namespace Avalonia.Automation.Peers
                 _selection.SelectionChanged -= OwnerSelectionChanged;
                 _selection = Owner.GetValue(ListBox.SelectionProperty);
                 _selection.SelectionChanged += OwnerSelectionChanged;
+                RaiseSelectionChanged();
             }
         }
 
         protected virtual void OwnerSelectionChanged(object sender, SelectionModelSelectionChangedEventArgs e)
         {
-            InvalidateProperties();
+            RaiseSelectionChanged();
+        }
+
+        private void RaiseSelectionChanged()
+        {
+            RaisePropertyChangedEvent(SelectionPatternIdentifiers.SelectionProperty, null, null);
         }
     }
 }

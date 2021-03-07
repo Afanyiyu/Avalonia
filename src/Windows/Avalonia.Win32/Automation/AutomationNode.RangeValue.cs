@@ -1,33 +1,19 @@
-﻿using Avalonia.Win32.Interop.Automation;
-using AAP = Avalonia.Automation.Provider;
+﻿using Avalonia.Automation.Provider;
+using UIA = Avalonia.Win32.Interop.Automation;
 
 #nullable enable
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationNode : IRangeValueProvider
+    internal partial class AutomationNode : UIA.IRangeValueProvider
     {
-        private double _rangeValue;
-        private double _rangeMinimum;
-        private double _rangeMaximum;
+        double UIA.IRangeValueProvider.Value => InvokeSync<IRangeValueProvider, double>(x => x.Value);
+        public bool IsReadOnly => InvokeSync<IRangeValueProvider, bool>(x => x.IsReadOnly);
+        public double Maximum => InvokeSync<IRangeValueProvider, double>(x => x.Maximum);
+        public double Minimum => InvokeSync<IRangeValueProvider, double>(x => x.Minimum);
+        public double LargeChange => 1;
+        public double SmallChange => 1;
 
-        double IRangeValueProvider.Value => _rangeValue;
-        bool IRangeValueProvider.IsReadOnly => false;
-        double IRangeValueProvider.Maximum => _rangeMaximum;
-        double IRangeValueProvider.Minimum => _rangeMinimum;
-        double IRangeValueProvider.LargeChange => 1;
-        double IRangeValueProvider.SmallChange => 1;
-
-        void IRangeValueProvider.SetValue(double value) => InvokeSync((AAP.IRangeValueProvider x) => x.SetValue(value));
-
-        private void UpdateRangeValue()
-        {
-            if (Peer is AAP.IRangeValueProvider peer)
-            {
-                UpdateProperty(UiaPropertyId.RangeValueValue, ref _rangeValue, peer.Value);
-                UpdateProperty(UiaPropertyId.RangeValueMinimum, ref _rangeMinimum, peer.Minimum);
-                UpdateProperty(UiaPropertyId.RangeValueMaximum, ref _rangeMaximum, peer.Maximum);
-            }
-        }
+        public void SetValue(double value) => InvokeSync<IRangeValueProvider>(x => x.SetValue(value));
     }
 }

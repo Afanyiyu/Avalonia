@@ -26,12 +26,12 @@ namespace Avalonia.Automation.Peers
 
         protected virtual void OwnerPropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property == RangeBase.MinimumProperty ||
-                e.Property == RangeBase.MaximumProperty ||
-                e.Property == RangeBase.ValueProperty)
-            {
-                InvalidateProperties();
-            }
+            if (e.Property == RangeBase.MinimumProperty)
+                RaisePropertyChangedEvent(RangeValuePatternIdentifiers.MinimumProperty, e.OldValue, e.NewValue);
+            else if (e.Property == RangeBase.MaximumProperty)
+                RaisePropertyChangedEvent(RangeValuePatternIdentifiers.MaximumProperty, e.OldValue, e.NewValue);
+            else if (e.Property == RangeBase.ValueProperty)
+                RaisePropertyChangedEvent(RangeValuePatternIdentifiers.ValueProperty, e.OldValue, e.NewValue);
         }
     }
 }

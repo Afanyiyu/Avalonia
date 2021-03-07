@@ -1,24 +1,18 @@
-﻿using Avalonia.Win32.Interop.Automation;
-using AAP = Avalonia.Automation.Provider;
+﻿using System.Runtime.InteropServices;
+using Avalonia.Automation.Provider;
+using UIA = Avalonia.Win32.Interop.Automation;
 
 #nullable enable
 
 namespace Avalonia.Win32.Automation
 {
-    internal partial class AutomationNode : IValueProvider
+    internal partial class AutomationNode : UIA.IValueProvider
     {
-        private string? _value;
+        public string? Value => InvokeSync<IValueProvider, string?>(x => x.Value);
 
-        string? IValueProvider.Value => _value;
-        bool IValueProvider.IsReadOnly => false;
-        void IValueProvider.SetValue(string? value) => InvokeSync<AAP.IValueProvider>(x => x.SetValue(value));
-
-        private void UpdateValue()
+        public void SetValue([MarshalAs(UnmanagedType.LPWStr)] string? value)
         {
-            if (Peer is AAP.IValueProvider peer)
-            {
-                UpdateProperty(UiaPropertyId.ValueValue, ref _value, peer.Value);
-            }
+            InvokeSync<IValueProvider>(x => x.SetValue(value));
         }
     }
 }

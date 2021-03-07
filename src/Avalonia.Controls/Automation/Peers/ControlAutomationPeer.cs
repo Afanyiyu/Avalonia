@@ -64,20 +64,7 @@ namespace Avalonia.Automation.Peers
             }
         }
 
-        protected override Rect GetBoundingRectangleCore()
-        {
-            var root = Owner.GetVisualRoot();
-
-            if (root is null)
-                return Rect.Empty;
-
-            var t = Owner.TransformToVisual(root);
-
-            if (!t.HasValue)
-                return Rect.Empty;
-
-            return new Rect(Owner.Bounds.Size).TransformToAABB(t.Value);
-        }
+        protected override Rect GetBoundingRectangleCore() => GetBounds(Owner.TransformedBounds);
 
         protected override IReadOnlyList<AutomationPeer>? GetChildrenCore()
         {
@@ -127,6 +114,11 @@ namespace Avalonia.Automation.Peers
             return false;
         }
 
+        private Rect GetBounds(TransformedBounds? bounds)
+        {
+            return bounds?.Bounds.TransformToAABB(bounds!.Value.Transform) ?? default;
+        }
+
         private void VisualChildrenChanged(object sender, EventArgs e) => InvalidateChildren();
 
         private void OwnerPropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
@@ -139,7 +131,10 @@ namespace Avalonia.Automation.Peers
             }
             else if (e.Property == Visual.TransformedBoundsProperty)
             {
-                InvalidateProperties();
+                RaisePropertyChangedEvent(
+                    AutomationElementIdentifiers.BoundingRectangleProperty,
+                    GetBounds((TransformedBounds?)e.OldValue),
+                    GetBounds((TransformedBounds?)e.NewValue));
             }
             else if (e.Property == Visual.VisualParentProperty)
             {

@@ -17,7 +17,6 @@ namespace Avalonia.Automation.Peers
         private bool _childrenValid;
         private AutomationPeer? _parent;
         private bool _parentValid;
-        private IRootProvider? _root;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutomationPeer"/> class.
@@ -28,7 +27,6 @@ namespace Avalonia.Automation.Peers
         protected AutomationPeer(IAutomationNodeFactory factory)
         {
             Node = factory.CreateNode(this);
-            _root = this as IRootProvider;
         }
 
         /// <summary>
@@ -84,15 +82,6 @@ namespace Avalonia.Automation.Peers
         public AutomationRole GetRole() => GetRoleCore();
 
         /// <summary>
-        /// Gets the root of the automation tree that the peer is a member of.
-        /// </summary>
-        public IRootProvider? GetRoot()
-        {
-            EnsureConnected();
-            return _root;
-        }
-
-        /// <summary>
         /// Gets a value that indicates whether the element that is associated with this automation
         /// peer currently has keyboard focus.
         /// </summary>
@@ -142,8 +131,20 @@ namespace Avalonia.Automation.Peers
         {
             _parent = null;
             _parentValid = false;
-            SetRoot(null);
-            Node.ParentChanged();
+        }
+
+        /// <summary>
+        /// Raises an event to notify the automation client of a changed property value.
+        /// </summary>
+        /// <param name="automationProperty">The property that changed.</param>
+        /// <param name="oldValue">The previous value of the property.</param>
+        /// <param name="newValue">The new value of the property.</param>
+        public void RaisePropertyChangedEvent(
+            AutomationProperty automationProperty,
+            object? oldValue,
+            object? newValue)
+        {
+            Node.PropertyChanged(automationProperty, oldValue, newValue);
         }
 
         protected abstract void BringIntoViewCore();
@@ -205,36 +206,9 @@ namespace Avalonia.Automation.Peers
             return _children = newChildren;
         }
 
-        protected void InvalidateProperties()
-        {
-            Node.PropertyChanged();
-        }
-
         private void SetParent(AutomationPeer? parent)
         {
-            if (parent != _parent)
-            {
-                _parent = parent;
-                SetRoot(parent?._root);
-                Node.ParentChanged();
-            }
-        }
-
-        private void SetRoot(IRootProvider? root)
-        {
-            if (_root != root)
-            {
-                _root = root;
-                Node.RootChanged();
-
-                if (_childrenValid && _children is object)
-                {
-                    foreach (var child in _children)
-                    {
-                        child.SetRoot(root);
-                    }
-                }
-            }
+            _parent = parent;
         }
     }
 }

@@ -193,64 +193,6 @@ namespace Avalonia.Controls.UnitTests.Automation
             }
         }
 
-        public class Root
-        {
-            [Fact]
-            public void Root_Is_Self_For_Root_Peer()
-            {
-                var root = new AutomationTestRoot();
-                var factory = CreateFactory();
-                var target = CreatePeer(factory, root);
-
-                Assert.Same(target, target.GetRoot());
-            }
-
-            [Fact]
-            public void Root_Is_Set_For_Descendants()
-            {
-                var root = new AutomationTestRoot
-                {
-                    Child = new Decorator
-                    {
-                        Child = new Border(),
-                    }
-                };
-
-                var factory = CreateFactory();
-                var rootPeer = CreatePeer(factory, root);
-
-                Assert.Same(rootPeer, rootPeer.GetChildren()[0].GetRoot());
-                Assert.Same(rootPeer, rootPeer.GetChildren()[0].GetChildren()[0].GetRoot());
-            }
-
-            [Fact]
-            public void Root_Updated_When_Moved_To_Separate_Visual_Tree()
-            {
-                var canvas = new Canvas();
-                var border = new Border { Child = canvas };
-                var root1 = new AutomationTestRoot { Child = border };
-                var root2 = new AutomationTestRoot();
-                var factory = CreateFactory();
-                var root1Peer = CreatePeer(factory, root1);
-                var root2Peer = CreatePeer(factory, root2);
-                var borderPeer = CreatePeer(factory, border);
-                var canvasPeer = CreatePeer(factory, canvas);
-
-                Assert.Same(root1Peer, borderPeer.GetRoot());
-                Assert.Same(root1Peer, canvasPeer.GetRoot());
-
-                root1.Child = null;
-
-                Assert.Null(borderPeer.GetRoot());
-                Assert.Null(canvasPeer.GetRoot());
-
-                root2.Child = border;
-
-                Assert.Same(root2Peer, borderPeer.GetRoot());
-                Assert.Same(root2Peer, canvasPeer.GetRoot());
-            }
-        }
-
         private static IAutomationNodeFactory CreateFactory()
         {
             var factory = new Mock<IAutomationNodeFactory>();

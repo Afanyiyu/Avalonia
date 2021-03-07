@@ -20,9 +20,7 @@ namespace Avalonia.Automation.Peers
 
         public ExpandCollapseState ExpandCollapseState
         {
-            get => Owner.GetValue(ComboBox.IsDropDownOpenProperty) ?
-                ExpandCollapseState.Expanded :
-                ExpandCollapseState.Collapsed;
+            get => State(Owner.GetValue(ComboBox.IsDropDownOpenProperty));
         }
 
         public void Collapse() => Owner.SetValue(ComboBox.IsDropDownOpenProperty, false);
@@ -53,8 +51,16 @@ namespace Avalonia.Automation.Peers
 
             if (e.Property == ComboBox.IsDropDownOpenProperty)
             {
-                InvalidateProperties();
+                RaisePropertyChangedEvent(
+                    ExpandCollapsePatternIdentifiers.ExpandCollapseStateProperty,
+                    State((bool)e.OldValue!),
+                    State((bool)e.NewValue!));
             }
+        }
+
+        private ExpandCollapseState State(bool value)
+        {
+            return value ? ExpandCollapseState.Expanded : ExpandCollapseState.Collapsed;
         }
 
         private class SurrogateItemPeer : ListItemAutomationPeer
